@@ -1784,22 +1784,6 @@ function normalizeJobUrl(url) {
   } catch(e) {}
   return url;
 }
-    const wordCount = text.split(/\s+/).filter(Boolean).length;
-    const domain    = getDomain(url);
-    const msg = warning
-      ? `⚠ ${warning}`
-      : `✓ Fetched ~${wordCount} words from ${domain}. Review the text below and trim if needed.`;
-    showFetchStatus(statusEl, warning ? 'error' : 'success', msg);
-    if (!warning) textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  } catch (err) {
-    urlInput.classList.add('error');
-    showFetchStatus(statusEl, 'error', `⚠ ${err.message}`);
-  } finally {
-    btn.disabled = false;
-    if (btnSpinner) btnSpinner.style.display = 'none';
-    if (btnText) btnText.textContent = 'Fetch ↓';
-  }
-}
 
 function showFetchStatus(el, type, msg) {
   if (!el) return;
