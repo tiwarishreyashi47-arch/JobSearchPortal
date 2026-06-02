@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Application Assistant · Gemini</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0f0d0a;
+  --paper: #faf8f4;
+  --cream: #f2ede4;
+  --warm-mid: #e8dfd0;
+  --gold: #c9963c;
+  --gold-light: #f5e8cc;
+  --muted: #7a7060;
+  --border: #ddd6c8;
+  --border-dark: #b8ae9e;
+  --green: #3a8c5c;
+  --green-light: #e6f4ed;
+  --red: #c94444;
+  --red-light: #fceaea;
+  --radius: 6px;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+/* Layout */
+.shell { display: flex; min-height: 100vh; }
+
+/* Hamburger button */
+.hamburger-btn {
+  position: fixed; top: 14px; left: 14px; z-index: 200;
+  background: var(--ink); border: none; border-radius: var(--radius);
+  width: 40px; height: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+}
+.hamburger-btn:hover { background: #2a2520; }
+.ham-bar { display: block; width: 18px; height: 2px; background: var(--paper); border-radius: 2px; transition: transform 0.25s, opacity 0.25s; }
+.hamburger-btn.open .ham-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger-btn.open .ham-bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger-btn.open .ham-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Backdrop */
+.sidebar-backdrop {
+  position: fixed; inset: 0; background: rgba(15,13,10,0.45); z-index: 140;
+  opacity: 0; visibility: hidden; transition: opacity 0.28s, visibility 0.28s;
+}
+.sidebar-backdrop.visible { opacity: 1; visibility: visible; }
+
+/* Sidebar */
+.sidebar {
+  width: 260px; min-width: 260px; background: var(--ink); color: var(--paper);
+  display: flex; flex-direction: column; padding: 32px 0;
+  position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 150;
+  transform: translateX(-260px);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s;
+}
+.sidebar.open { transform: translateX(0); box-shadow: 6px 0 32px rgba(0,0,0,0.22); }
+.sidebar-brand { padding: 0 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-brand h1 { font-family: var(--serif); font-size: 1.25rem; line-height: 1.3; color: var(--paper); margin-bottom: 4px; }
+.sidebar-brand .tagline { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.06em; text-transform: uppercase; }
+.sidebar-section { padding: 20px 24px 0; }
+.sidebar-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
+.mode-btn { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; color: rgba(255,255,255,0.55); font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 9px 12px; border-radius: var(--radius); cursor: pointer; text-align: left; transition: all 0.15s; margin-bottom: 2px; }
+.mode-btn .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.mode-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+.mode-btn.active { background: var(--gold); color: var(--ink); font-weight: 600; }
+.mode-btn .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-left: auto; }
+.mode-btn .status-dot.complete { background: var(--green); box-shadow: 0 0 0 2px rgba(58,140,92,0.3); }
+.mode-btn .status-dot.incomplete { background: #c9963c; box-shadow: 0 0 0 2px rgba(201,150,60,0.3); }
+.sidebar-profile { margin-top: auto; padding: 20px 24px 0; border-top: 1px solid rgba(255,255,255,0.1); }
+.profile-chip { display: flex; align-items: center; gap: 10px; }
+.profile-avatar { width: 32px; height: 32px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 13px; color: var(--ink); flex-shrink: 0; font-weight: 600; }
+.profile-name { font-size: 12px; font-weight: 500; color: var(--paper); line-height: 1.3; }
+.profile-role { font-size: 11px; color: rgba(255,255,255,0.4); }
+.profile-setup-link { font-size: 11px; color: var(--gold); cursor: pointer; text-decoration: underline; margin-top: 4px; display: block; }
+
+/* Main area */
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; width: 100%; }
+.main-inner { max-width: 820px; width: 100%; margin: 0 auto; padding: 40px 40px 80px 64px; flex: 1; }
+
+/* Panel */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Page header */
+.page-header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.page-header h2 { font-family: var(--serif); font-size: 1.75rem; color: var(--ink); margin-bottom: 4px; }
+.page-header p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+/* Form elements */
+.field { margin-bottom: 18px; }
+.field-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; display: block; }
+textarea, input[type="text"], input[type="password"], select {
+  width: 100%; background: white; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.6;
+  padding: 10px 14px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+textarea { resize: vertical; }
+textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus {
+  border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,150,60,0.15);
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Pills */
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.pill { background: white; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 5px 14px; cursor: pointer; transition: all 0.15s; user-select: none; }
+.pill:hover { border-color: var(--border-dark); color: var(--ink); }
+.pill.selected { background: var(--gold-light); border-color: var(--gold); color: #7a4e10; font-weight: 600; }
+
+/* Buttons */
+.btn-primary { background: var(--ink); border: none; border-radius: var(--radius); color: var(--paper); font-family: var(--sans); font-size: 14px; font-weight: 500; padding: 11px 28px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary:hover:not(:disabled) { background: #2a2520; }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-secondary { background: white; border: 1px solid var(--border); border-radius: var(--radius); color: var(--muted); font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 8px 18px; cursor: pointer; transition: all 0.15s; }
+.btn-secondary:hover { border-color: var(--border-dark); color: var(--ink); }
+.btn-ghost { background: none; border: none; color: var(--muted); font-family: var(--sans); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; }
+.btn-ghost:hover { color: var(--red); background: var(--red-light); }
+.btn-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.btn-add { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--muted); font-family: var(--sans); font-size: 13px; padding: 9px 18px; cursor: pointer; transition: all 0.15s; }
+.btn-add:hover { border-color: var(--gold); color: #7a4e10; background: var(--gold-light); }
+
+/* Spinner */
+.spinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-top-color: rgba(255,255,255,0.9); border-radius: 50%; animation: spin 0.65s linear infinite; display: none; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Result area */
+.result-wrap { margin-top: 28px; display: none; }
+.result-wrap.visible { display: block; }
+.result-card { background: white; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.result-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: var(--cream); border-bottom: 1px solid var(--border); }
+.result-head-left { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.result-actions { display: flex; gap: 6px; }
+.icon-btn { background: white; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 4px 12px; cursor: pointer; transition: all 0.15s; }
+.icon-btn:hover { border-color: var(--border-dark); color: var(--ink); }
+
+/* History / iterations */
+.history-item { border-bottom: 1px solid var(--border); overflow: hidden; }
+.history-item:last-child { border-bottom: none; }
+.history-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 18px; background: var(--cream); border-bottom: 1px solid var(--border); }
+.version-badge { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: white; }
+.version-badge.latest { border-color: var(--gold); color: #7a4e10; background: var(--gold-light); }
+.history-body { padding: 16px 22px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: var(--ink); }
+.history-body.stale { color: #b0a898; }
+.feedback-bubble { margin: 0; padding: 8px 22px; border-bottom: 1px solid var(--border); background: #fffdf5; display: flex; align-items: flex-start; gap: 10px; }
+.fb-you { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gold); white-space: nowrap; padding-top: 2px; min-width: 28px; }
+.fb-text { font-size: 13px; color: var(--muted); line-height: 1.6; font-style: italic; }
+
+/* Refine section */
+.refine-section { border-top: 1px solid var(--border); background: #fafaf8; padding: 14px 18px; }
+.refine-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.quick-refine { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.qr-btn { background: white; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-family: var(--sans); font-size: 12px; padding: 4px 12px; cursor: pointer; transition: all 0.15s; }
+.qr-btn:hover { border-color: var(--gold); color: #7a4e10; background: var(--gold-light); }
+.refine-row { display: flex; gap: 8px; align-items: flex-end; }
+.refine-input { flex: 1; background: white; border: 1px solid var(--border); border-radius: 20px; color: var(--ink); font-family: var(--sans); font-size: 13px; line-height: 1.5; padding: 8px 16px; resize: none; outline: none; transition: border-color 0.15s; height: 38px; overflow: hidden; }
+.refine-input:focus { border-color: var(--gold); }
+.refine-send { background: var(--ink); border: none; border-radius: 20px; color: white; font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 8px 18px; cursor: pointer; height: 38px; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.15s; }
+.refine-send:hover:not(:disabled) { background: #2a2520; }
+.refine-send:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Info box */
+.info-box { background: var(--gold-light); border: 1px solid #e0c07a; border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: #6b4410; line-height: 1.6; margin-bottom: 20px; }
+.info-box strong { font-weight: 600; }
+
+/* Warning banner */
+.warning-banner { background: var(--red-light); border: 1px solid #e0a0a0; border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: #7a2020; line-height: 1.6; margin-bottom: 20px; display: none; }
+.warning-banner a { color: #c94444; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+/* Success box */
+.success-box { background: var(--green-light); border: 1px solid #9fcfb2; border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: #1e5c3a; line-height: 1.6; margin-bottom: 20px; display: none; }
+
+/* Resume selector */
+.resume-selector-wrap { position: relative; }
+.resume-selector-wrap select { appearance: none; -webkit-appearance: none; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7060' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center; padding-right: 38px; cursor: pointer; }
+.resume-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.resume-badge .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+
+/* Setup panel — file upload zone */
+.upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; background: white; margin-bottom: 8px; }
+.upload-zone:hover { border-color: var(--gold); background: var(--gold-light); }
+.upload-zone.has-file { border-color: var(--green); border-style: solid; background: var(--green-light); }
+.upload-zone .uz-icon { font-size: 20px; flex-shrink: 0; }
+.upload-zone .uz-text { flex: 1; }
+.upload-zone .uz-title { font-size: 13px; font-weight: 500; color: var(--ink); }
+.upload-zone .uz-sub { font-size: 12px; color: var(--muted); }
+.upload-zone.has-file .uz-title { color: var(--green); }
+
+/* Setup section cards */
+.setup-section { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 18px; }
+.setup-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.setup-section-num { width: 26px; height: 26px; background: var(--ink); color: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.setup-section-title { font-family: var(--serif); font-size: 1.1rem; color: var(--ink); }
+.setup-section-title span { font-family: var(--sans); font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+/* Resume variant cards */
+.resume-variants-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+.resume-variant { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.resume-variant-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--cream); border-bottom: 1px solid var(--border); }
+.resume-variant-title { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.resume-variant-body { padding: 16px; }
+.resume-variant-body .field { margin-bottom: 12px; }
+.resume-variant-body .field:last-child { margin-bottom: 0; }
+
+/* API key field */
+.api-key-wrap { position: relative; }
+.api-key-wrap input { padding-right: 80px; font-family: monospace; font-size: 13px; }
+.api-key-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); font-family: var(--sans); font-size: 12px; cursor: pointer; padding: 4px; }
+.api-key-note { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+
+/* Welcome screen */
+.welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; }
+.welcome h2 { font-family: var(--serif); font-size: 2rem; margin-bottom: 12px; color: var(--ink); }
+.welcome p { color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 440px; margin-bottom: 28px; }
+.welcome-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 520px; width: 100%; }
+.welcome-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 18px; text-align: left; cursor: pointer; transition: all 0.15s; }
+.welcome-card:hover { border-color: var(--gold); box-shadow: 0 4px 16px rgba(201,150,60,0.12); transform: translateY(-1px); }
+.welcome-card .card-icon { font-size: 22px; margin-bottom: 8px; }
+.welcome-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.welcome-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); border-radius: 8px; padding: 10px 18px; font-size: 13px; color: white; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 999; font-family: var(--sans); }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* JD URL Fetch */
+.jd-fetch-row { display: flex; gap: 8px; margin-bottom: 0; }
+.jd-url-input { flex: 1; background: white; border: 1px solid var(--border); border-radius: var(--radius); color: var(--ink); font-family: var(--sans); font-size: 13px; padding: 9px 14px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; min-width: 0; }
+.jd-url-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,150,60,0.15); }
+.jd-url-input::placeholder { color: #b0a898; }
+.jd-url-input.success { border-color: var(--green); background: var(--green-light); }
+.jd-url-input.error { border-color: var(--red); }
+.jd-fetch-btn { background: var(--ink); border: none; border-radius: var(--radius); color: var(--paper); font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 9px 18px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; flex-shrink: 0; }
+.jd-fetch-btn:hover:not(:disabled) { background: #2a2520; }
+.jd-fetch-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.jd-fetch-btn .spinner { border-color: rgba(255,255,255,0.3); border-top-color: white; }
+.jd-site-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.jd-site-chip { font-size: 11px; color: var(--muted); background: var(--cream); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; user-select: none; }
+.jd-divider { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; }
+.jd-divider span { font-size: 11px; color: var(--muted); white-space: nowrap; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+.jd-divider::before, .jd-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.jd-fetch-status { font-size: 12px; line-height: 1.5; margin-top: 7px; display: none; padding: 7px 12px; border-radius: var(--radius); }
+.jd-fetch-status.success { display: block; background: var(--green-light); color: #1e5c3a; border: 1px solid #9fcfb2; }
+.jd-fetch-status.error { display: block; background: var(--red-light); color: #7a2020; border: 1px solid #e0a0a0; }
+</style>
+</head>
+<body>
+
+<!-- Hamburger toggle -->
+<button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+  <span class="ham-bar"></span>
+  <span class="ham-bar"></span>
+  <span class="ham-bar"></span>
+</button>
+
+<!-- Backdrop (click to close sidebar) -->
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Job Application<br>Assistant</h1>
+      <div class="tagline">Powered by Gemini · Open Source</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Setup</div>
+      <button class="mode-btn" data-mode="setup" onclick="switchMode('setup')">
+        <span class="icon">⚙</span> My Profile
+        <span class="status-dot incomplete" id="setup-status-dot"></span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Tools</div>
+      <button class="mode-btn" data-mode="home" onclick="switchMode('home')">
+        <span class="icon">⌂</span> Home
+      </button>
+      <button class="mode-btn" data-mode="tailor" onclick="switchMode('tailor')">
+        <span class="icon">✦</span> Tailor Resume
+      </button>
+      <button class="mode-btn" data-mode="cover" onclick="switchMode('cover')">
+        <span class="icon">✉</span> Cover Letter
+      </button>
+      <button class="mode-btn" data-mode="outreach" onclick="switchMode('outreach')">
+        <span class="icon">↗</span> Cold Outreach
+      </button>
+      <button class="mode-btn" data-mode="gap" onclick="switchMode('gap')">
+        <span class="icon">◎</span> Gap Analysis
+      </button>
+      <button class="mode-btn" data-mode="interview" onclick="switchMode('interview')">
+        <span class="icon">◈</span> Interview Prep
+      </button>
+    </div>
+
+    <div class="sidebar-profile">
+      <div class="profile-chip">
+        <div class="profile-avatar" id="sidebar-avatar">?</div>
+        <div>
+          <div class="profile-name" id="sidebar-name">No profile yet</div>
+          <div class="profile-role" id="sidebar-role">Complete setup to begin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-inner">
+
+      <!-- ═══════════════════════════════════ SETUP ═══ -->
+      <div class="panel active" id="panel-setup">
+        <div class="page-header">
+          <h2>My Profile</h2>
+          <p>Enter your background, upload your resume(s), and add your free Gemini API key. Everything is saved locally in your browser.</p>
+        </div>
+
+        <div class="success-box" id="setup-success">
+          ✓ Profile saved! Head to <strong>Home</strong> to start using the tools.
+        </div>
+
+        <!-- Section 1: API Key -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <div class="setup-section-num">1</div>
+            <div class="setup-section-title">API Key <span>Free · No credit card · Google account only</span></div>
+          </div>
+          <div class="field">
+            <label class="field-label">Google Gemini API Key</label>
+            <div class="api-key-wrap">
+              <input type="password" id="setup-api-key" placeholder="AIzaSy…" autocomplete="off">
+              <button class="api-key-toggle" onclick="toggleApiKeyVisibility()" id="api-key-toggle-btn">Show</button>
+            </div>
+            <p class="api-key-note">
+              Get a free key in 60 seconds — go to <strong>aistudio.google.com</strong>, sign in with Google, click <strong>Get API key → Create API key</strong>. No credit card needed.<br><br>
+              ⚠ <strong>Privacy note:</strong> On the free tier, Google may use your prompts to improve their models. Avoid pasting highly sensitive personal info. Stored only in your browser's local storage.
+            </p>
+          </div>
+        </div>
+
+        <!-- Section 2: Personal Info -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <div class="setup-section-num">2</div>
+            <div class="setup-section-title">Personal Info</div>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label class="field-label">Your Name</label>
+              <input type="text" id="setup-name" placeholder="e.g. Alex Chen">
+            </div>
+            <div class="field">
+              <label class="field-label">Current / Most Recent Title</label>
+              <input type="text" id="setup-title" placeholder="e.g. Product Manager · B2B SaaS">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Background Context -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <div class="setup-section-num">3</div>
+            <div class="setup-section-title">Professional Background <span>The AI reads this to understand who you are</span></div>
+          </div>
+          <div class="field">
+            <label class="field-label">Upload a file (.docx or .txt) — or paste below</label>
+            <div class="upload-zone" id="bg-upload-zone" onclick="document.getElementById('bg-file-input').click()">
+              <span class="uz-icon">📄</span>
+              <div class="uz-text">
+                <div class="uz-title" id="bg-upload-title">Click to upload your resume or background doc</div>
+                <div class="uz-sub">.docx or .txt — text will be extracted and placed below</div>
+              </div>
+            </div>
+            <input type="file" id="bg-file-input" accept=".docx,.txt" style="display:none" onchange="handleBgUpload(this)">
+            <textarea id="setup-background" rows="10" placeholder="Paste your full professional background here. The more detail, the better the AI can tailor outputs for you.
+
+Example things to include:
+• Your career history with key achievements and metrics
+• Skills and tools you're proficient in
+• Education and certifications
+• The types of roles you're targeting
+• Any domain expertise (e.g. legal, fintech, healthcare)
+• Personal notes about what you want to emphasize"></textarea>
+          </div>
+        </div>
+
+        <!-- Section 4: Resume Variants -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <div class="setup-section-num">4</div>
+            <div class="setup-section-title">Resume Variants <span>Optional — add one or more tailored versions</span></div>
+          </div>
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6;">
+            Add different versions of your resume for different role types (e.g. "PM Resume" vs "Strategy & Ops Resume"). The Tailor Resume tool will let you pick which one to use as a starting point.
+          </p>
+
+          <div class="resume-variants-list" id="resume-variants-list">
+            <!-- Dynamically populated -->
+          </div>
+
+          <button class="btn-add" onclick="addResumeVariant()" id="add-variant-btn">
+            + Add resume variant
+          </button>
+        </div>
+
+        <!-- Save -->
+        <div class="btn-row" style="margin-top: 8px;">
+          <button class="btn-primary" onclick="saveSetup()">
+            Save Profile
+          </button>
+          <button class="btn-secondary" onclick="clearSetup()">Clear all data</button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ HOME ═══ -->
+      <div class="panel" id="panel-home">
+        <div class="welcome">
+          <h2>What are we working on?</h2>
+          <p>Your AI job application co-pilot, loaded with your background. Pick a tool to get started.</p>
+          <div class="welcome-grid">
+            <div class="welcome-card" onclick="switchMode('tailor')">
+              <div class="card-icon">✦</div>
+              <h3>Tailor Resume</h3>
+              <p>Reframe your bullets for a specific JD and role type</p>
+            </div>
+            <div class="welcome-card" onclick="switchMode('cover')">
+              <div class="card-icon">✉</div>
+              <h3>Cover Letter</h3>
+              <p>Write a compelling, personalised cover letter fast</p>
+            </div>
+            <div class="welcome-card" onclick="switchMode('outreach')">
+              <div class="card-icon">↗</div>
+              <h3>Cold Outreach</h3>
+              <p>DM or email to a hiring manager or recruiter</p>
+            </div>
+            <div class="welcome-card" onclick="switchMode('gap')">
+              <div class="card-icon">◎</div>
+              <h3>Gap Analysis</h3>
+              <p>Find what's missing and how to address it</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ TAILOR ═══ -->
+      <div class="panel" id="panel-tailor">
+        <div class="page-header">
+          <h2>Tailor Resume</h2>
+          <p>Paste a job description and get your experience reframed to match — without fabricating anything.</p>
+        </div>
+
+        <div class="warning-banner" id="tailor-warning">
+          ⚠ Your profile isn't set up yet. <a onclick="switchMode('setup')">Complete setup first →</a>
+        </div>
+
+        <div class="info-box" id="tailor-info-box">
+          <strong>Pre-loaded:</strong> <span id="tailor-profile-summary">Your profile context.</span>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Job Description</label>
+          <div class="jd-fetch-row">
+            <input type="text" class="jd-url-input" id="tailor-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <button class="jd-fetch-btn" onclick="fetchJD('tailor-jd-url', 'tailor-jd', 'tailor-jd-status')">
+              <span class="spinner" id="tailor-jd-spinner"></span>
+              <span id="tailor-jd-btn-text">Fetch ↓</span>
+            </button>
+          </div>
+          <div class="jd-site-chips">
+            <span class="jd-site-chip">LinkedIn</span><span class="jd-site-chip">Indeed</span><span class="jd-site-chip">Weekday</span><span class="jd-site-chip">Instahyre</span><span class="jd-site-chip">Greenhouse</span><span class="jd-site-chip">Lever</span><span class="jd-site-chip">Any public URL</span>
+          </div>
+          <div class="jd-fetch-status" id="tailor-jd-status"></div>
+          <div class="jd-divider"><span>or paste below</span></div>
+          <textarea id="tailor-jd" rows="7" placeholder="Paste the full job description here…"></textarea>
+        </div>
+
+        <div class="field" id="tailor-resume-field">
+          <label class="field-label">Resume to use</label>
+          <div class="resume-selector-wrap">
+            <select id="tailor-resume-select" onchange="updateResumeBadge()">
+              <option value="__background__">Use my full background context</option>
+            </select>
+          </div>
+          <div class="resume-badge">
+            <span class="badge-dot"></span>
+            <span id="resume-badge-text">Your full professional background will be used.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Role Type</label>
+          <div class="pill-row" id="tailor-role-pills">
+            <div class="pill selected" data-val="Product Manager">Product Manager</div>
+            <div class="pill" data-val="Product Operations">Product Operations</div>
+            <div class="pill" data-val="Strategy & Operations">Strategy & Ops</div>
+            <div class="pill" data-val="Program Manager">Program Manager</div>
+            <div class="pill" data-val="Chief of Staff">Chief of Staff</div>
+            <div class="pill" data-val="Founder's Office">Founder's Office</div>
+            <div class="pill" data-val="Implementation Manager">Implementation Manager</div>
+            <div class="pill" data-val="Software Engineer">Software Engineer</div>
+            <div class="pill" data-val="Data Analyst">Data Analyst</div>
+            <div class="pill" data-val="Marketing Manager">Marketing Manager</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Emphasize</label>
+          <div class="pill-row" id="tailor-emphasis-pills">
+            <div class="pill selected" data-val="AI & technical expertise">AI & Technical</div>
+            <div class="pill selected" data-val="people management and leadership">People Management</div>
+            <div class="pill" data-val="enterprise customer delivery">Enterprise Delivery</div>
+            <div class="pill" data-val="cross-functional leadership">Cross-functional</div>
+            <div class="pill" data-val="product thinking and roadmap">Product Thinking</div>
+            <div class="pill" data-val="domain expertise">Domain Expertise</div>
+            <div class="pill" data-val="0-to-1 building">0-to-1 Building</div>
+            <div class="pill" data-val="metrics and data-driven decisions">Metrics & Data</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Additional Notes (optional)</label>
+          <textarea id="tailor-notes" rows="2" placeholder="Anything specific? e.g. 'They care about data skills', 'Keep legal background visible'…"></textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" id="tailor-btn" onclick="generate('tailor')">
+            <span class="spinner" id="tailor-spinner"></span>
+            <span id="tailor-btn-text">Generate tailored bullets</span>
+          </button>
+        </div>
+
+        <div class="result-wrap" id="tailor-result">
+          <div class="result-card">
+            <div class="result-head">
+              <span class="result-head-left">Tailored Resume Bullets</span>
+              <div class="result-actions">
+                <button class="icon-btn" onclick="copyLatest('tailor')">Copy</button>
+                <button class="icon-btn" onclick="resetPanel('tailor')">Reset</button>
+              </div>
+            </div>
+            <div id="tailor-iterations"></div>
+            <div class="refine-section">
+              <div class="refine-label">Refine</div>
+              <div class="quick-refine">
+                <button class="qr-btn" onclick="quickRefine('tailor', this)">More concise</button>
+                <button class="qr-btn" onclick="quickRefine('tailor', this)">Show more impact metrics</button>
+                <button class="qr-btn" onclick="quickRefine('tailor', this)">Stronger action verbs</button>
+                <button class="qr-btn" onclick="quickRefine('tailor', this)">Highlight leadership more</button>
+                <button class="qr-btn" onclick="quickRefine('tailor', this)">Match JD keywords closer</button>
+                <button class="qr-btn" onclick="quickRefine('tailor', this)">Rewrite from scratch</button>
+              </div>
+              <div class="refine-row">
+                <textarea class="refine-input" id="tailor-refine-input" placeholder="Tell me what to change…"></textarea>
+                <button class="refine-send" id="tailor-refine-btn" onclick="refine('tailor')">
+                  <span class="spinner" id="tailor-fb-spinner"></span>
+                  Refine ↵
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ COVER LETTER ═══ -->
+      <div class="panel" id="panel-cover">
+        <div class="page-header">
+          <h2>Cover Letter</h2>
+          <p>A focused, authentic cover letter that connects your story to the role — not a generic template.</p>
+        </div>
+        <div class="warning-banner" id="cover-warning">
+          ⚠ Your profile isn't set up yet. <a onclick="switchMode('setup')">Complete setup first →</a>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label class="field-label">Company Name</label>
+            <input type="text" id="cover-company" placeholder="e.g. Anthropic, Notion, Linear…">
+          </div>
+          <div class="field">
+            <label class="field-label">Role Title</label>
+            <input type="text" id="cover-role" placeholder="e.g. Product Manager, Chief of Staff…">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Job Description (or key requirements)</label>
+          <div class="jd-fetch-row">
+            <input type="text" class="jd-url-input" id="cover-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <button class="jd-fetch-btn" onclick="fetchJD('cover-jd-url', 'cover-jd', 'cover-jd-status')">
+              <span class="spinner" id="cover-jd-spinner"></span>
+              <span id="cover-jd-btn-text">Fetch ↓</span>
+            </button>
+          </div>
+          <div class="jd-site-chips">
+            <span class="jd-site-chip">LinkedIn</span><span class="jd-site-chip">Indeed</span><span class="jd-site-chip">Weekday</span><span class="jd-site-chip">Instahyre</span><span class="jd-site-chip">Greenhouse</span><span class="jd-site-chip">Lever</span><span class="jd-site-chip">Any public URL</span>
+          </div>
+          <div class="jd-fetch-status" id="cover-jd-status"></div>
+          <div class="jd-divider"><span>or paste below</span></div>
+          <textarea id="cover-jd" rows="5" placeholder="Paste the JD or summarise what they're looking for…"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Why this role / company?</label>
+          <textarea id="cover-why" rows="3" placeholder="What genuinely excites you about this? Any personal angle? (Even a rough thought works.)"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Tone</label>
+          <div class="pill-row" id="cover-tone-pills">
+            <div class="pill selected" data-val="confident and direct">Confident</div>
+            <div class="pill" data-val="warm and personal">Warm</div>
+            <div class="pill" data-val="formal and professional">Formal</div>
+            <div class="pill" data-val="bold and energetic">Bold</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Length</label>
+          <div class="pill-row" id="cover-length-pills">
+            <div class="pill selected" data-val="3 tight paragraphs">Short (3 paras)</div>
+            <div class="pill" data-val="4-5 paragraphs">Standard (4-5 paras)</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="cover-btn" onclick="generate('cover')">
+            <span class="spinner" id="cover-spinner"></span>
+            <span id="cover-btn-text">Write cover letter</span>
+          </button>
+        </div>
+        <div class="result-wrap" id="cover-result">
+          <div class="result-card">
+            <div class="result-head">
+              <span class="result-head-left">Cover Letter Draft</span>
+              <div class="result-actions">
+                <button class="icon-btn" onclick="copyLatest('cover')">Copy</button>
+                <button class="icon-btn" onclick="resetPanel('cover')">Reset</button>
+              </div>
+            </div>
+            <div id="cover-iterations"></div>
+            <div class="refine-section">
+              <div class="refine-label">Refine</div>
+              <div class="quick-refine">
+                <button class="qr-btn" onclick="quickRefine('cover', this)">Make it shorter</button>
+                <button class="qr-btn" onclick="quickRefine('cover', this)">Open stronger</button>
+                <button class="qr-btn" onclick="quickRefine('cover', this)">More personal / specific</button>
+                <button class="qr-btn" onclick="quickRefine('cover', this)">Less formal</button>
+                <button class="qr-btn" onclick="quickRefine('cover', this)">Add a stronger close</button>
+                <button class="qr-btn" onclick="quickRefine('cover', this)">Rewrite completely</button>
+              </div>
+              <div class="refine-row">
+                <textarea class="refine-input" id="cover-refine-input" placeholder="Tell me what to change…"></textarea>
+                <button class="refine-send" id="cover-refine-btn" onclick="refine('cover')">
+                  <span class="spinner" id="cover-fb-spinner"></span>
+                  Refine ↵
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ OUTREACH ═══ -->
+      <div class="panel" id="panel-outreach">
+        <div class="page-header">
+          <h2>Cold Outreach</h2>
+          <p>A tight DM or email that doesn't sound desperate — focused, specific, and worth replying to.</p>
+        </div>
+        <div class="warning-banner" id="outreach-warning">
+          ⚠ Your profile isn't set up yet. <a onclick="switchMode('setup')">Complete setup first →</a>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label class="field-label">Channel</label>
+            <div class="pill-row" id="outreach-channel-pills">
+              <div class="pill selected" data-val="LinkedIn DM (short, under 300 chars)">LinkedIn DM</div>
+              <div class="pill" data-val="email">Email</div>
+              <div class="pill" data-val="Twitter/X DM (very short, punchy)">Twitter DM</div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Recipient Type</label>
+            <div class="pill-row" id="outreach-recipient-pills">
+              <div class="pill selected" data-val="Hiring Manager">Hiring Manager</div>
+              <div class="pill" data-val="Founder/CEO">Founder / CEO</div>
+              <div class="pill" data-val="Recruiter">Recruiter</div>
+              <div class="pill" data-val="Industry Contact">Industry Contact</div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Their context (name, company, what you know about them)</label>
+          <textarea id="outreach-context" rows="3" placeholder="e.g. 'Priya, Head of Product at Linear. Posted about their AI roadmap. Building infra tools. Series B.'"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">What's the ask?</label>
+          <div class="pill-row" id="outreach-ask-pills">
+            <div class="pill selected" data-val="a 15-minute call">15-min call</div>
+            <div class="pill" data-val="referral to an open role">Referral</div>
+            <div class="pill" data-val="advice or a quick chat">Advice / chat</div>
+            <div class="pill" data-val="expressing interest in a role">Express interest</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Any specific hook or connection?</label>
+          <textarea id="outreach-hook" rows="2" placeholder="Something specific that makes this not generic — a shared connection, their content, a relevant project…"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="outreach-btn" onclick="generate('outreach')">
+            <span class="spinner" id="outreach-spinner"></span>
+            <span id="outreach-btn-text">Write outreach</span>
+          </button>
+        </div>
+        <div class="result-wrap" id="outreach-result">
+          <div class="result-card">
+            <div class="result-head">
+              <span class="result-head-left">Outreach Draft</span>
+              <div class="result-actions">
+                <button class="icon-btn" onclick="copyLatest('outreach')">Copy</button>
+                <button class="icon-btn" onclick="resetPanel('outreach')">Reset</button>
+              </div>
+            </div>
+            <div id="outreach-iterations"></div>
+            <div class="refine-section">
+              <div class="refine-label">Refine</div>
+              <div class="quick-refine">
+                <button class="qr-btn" onclick="quickRefine('outreach', this)">Make it shorter</button>
+                <button class="qr-btn" onclick="quickRefine('outreach', this)">Sound less salesy</button>
+                <button class="qr-btn" onclick="quickRefine('outreach', this)">More confident</button>
+                <button class="qr-btn" onclick="quickRefine('outreach', this)">More specific hook</button>
+                <button class="qr-btn" onclick="quickRefine('outreach', this)">Rewrite completely</button>
+              </div>
+              <div class="refine-row">
+                <textarea class="refine-input" id="outreach-refine-input" placeholder="Tell me what to change…"></textarea>
+                <button class="refine-send" id="outreach-refine-btn" onclick="refine('outreach')">
+                  <span class="spinner" id="outreach-fb-spinner"></span>
+                  Refine ↵
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ GAP ANALYSIS ═══ -->
+      <div class="panel" id="panel-gap">
+        <div class="page-header">
+          <h2>Gap Analysis</h2>
+          <p>Honest assessment of where your profile is strong, where it's weak, and how to address the gaps.</p>
+        </div>
+        <div class="warning-banner" id="gap-warning">
+          ⚠ Your profile isn't set up yet. <a onclick="switchMode('setup')">Complete setup first →</a>
+        </div>
+        <div class="field">
+          <label class="field-label">Job Description</label>
+          <div class="jd-fetch-row">
+            <input type="text" class="jd-url-input" id="gap-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <button class="jd-fetch-btn" onclick="fetchJD('gap-jd-url', 'gap-jd', 'gap-jd-status')">
+              <span class="spinner" id="gap-jd-spinner"></span>
+              <span id="gap-jd-btn-text">Fetch ↓</span>
+            </button>
+          </div>
+          <div class="jd-site-chips">
+            <span class="jd-site-chip">LinkedIn</span><span class="jd-site-chip">Indeed</span><span class="jd-site-chip">Weekday</span><span class="jd-site-chip">Instahyre</span><span class="jd-site-chip">Greenhouse</span><span class="jd-site-chip">Lever</span><span class="jd-site-chip">Any public URL</span>
+          </div>
+          <div class="jd-fetch-status" id="gap-jd-status"></div>
+          <div class="jd-divider"><span>or paste below</span></div>
+          <textarea id="gap-jd" rows="7" placeholder="Paste the full job description…"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Role Type</label>
+          <div class="pill-row" id="gap-role-pills">
+            <div class="pill selected" data-val="Product Manager">Product Manager</div>
+            <div class="pill" data-val="Product Operations">Product Operations</div>
+            <div class="pill" data-val="Strategy & Operations">Strategy & Ops</div>
+            <div class="pill" data-val="Program Manager">Program Manager</div>
+            <div class="pill" data-val="Chief of Staff">Chief of Staff</div>
+            <div class="pill" data-val="Founder's Office">Founder's Office</div>
+            <div class="pill" data-val="Software Engineer">Software Engineer</div>
+            <div class="pill" data-val="Data Analyst">Data Analyst</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="gap-btn" onclick="generate('gap')">
+            <span class="spinner" id="gap-spinner"></span>
+            <span id="gap-btn-text">Analyse fit & gaps</span>
+          </button>
+        </div>
+        <div class="result-wrap" id="gap-result">
+          <div class="result-card">
+            <div class="result-head">
+              <span class="result-head-left">Gap Analysis</span>
+              <div class="result-actions">
+                <button class="icon-btn" onclick="copyLatest('gap')">Copy</button>
+                <button class="icon-btn" onclick="resetPanel('gap')">Reset</button>
+              </div>
+            </div>
+            <div id="gap-iterations"></div>
+            <div class="refine-section">
+              <div class="refine-label">Ask a follow-up</div>
+              <div class="quick-refine">
+                <button class="qr-btn" onclick="quickRefine('gap', this)">How do I address the gaps?</button>
+                <button class="qr-btn" onclick="quickRefine('gap', this)">What should I highlight most?</button>
+                <button class="qr-btn" onclick="quickRefine('gap', this)">Is this worth applying to?</button>
+              </div>
+              <div class="refine-row">
+                <textarea class="refine-input" id="gap-refine-input" placeholder="Ask anything about this role or your fit…"></textarea>
+                <button class="refine-send" id="gap-refine-btn" onclick="refine('gap')">
+                  <span class="spinner" id="gap-fb-spinner"></span>
+                  Ask ↵
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════ INTERVIEW PREP ═══ -->
+      <div class="panel" id="panel-interview">
+        <div class="page-header">
+          <h2>Interview Prep</h2>
+          <p>Get likely questions and strong answers drawn from your actual experience.</p>
+        </div>
+        <div class="warning-banner" id="interview-warning">
+          ⚠ Your profile isn't set up yet. <a onclick="switchMode('setup')">Complete setup first →</a>
+        </div>
+        <div class="field">
+          <label class="field-label">Job Description / Role</label>
+          <div class="jd-fetch-row">
+            <input type="text" class="jd-url-input" id="interview-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <button class="jd-fetch-btn" onclick="fetchJD('interview-jd-url', 'interview-jd', 'interview-jd-status')">
+              <span class="spinner" id="interview-jd-spinner"></span>
+              <span id="interview-jd-btn-text">Fetch ↓</span>
+            </button>
+          </div>
+          <div class="jd-site-chips">
+            <span class="jd-site-chip">LinkedIn</span><span class="jd-site-chip">Indeed</span><span class="jd-site-chip">Weekday</span><span class="jd-site-chip">Instahyre</span><span class="jd-site-chip">Greenhouse</span><span class="jd-site-chip">Lever</span><span class="jd-site-chip">Any public URL</span>
+          </div>
+          <div class="jd-fetch-status" id="interview-jd-status"></div>
+          <div class="jd-divider"><span>or paste below</span></div>
+          <textarea id="interview-jd" rows="4" placeholder="Paste the JD or describe the role…"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Interview Round / Type</label>
+          <div class="pill-row" id="interview-type-pills">
+            <div class="pill selected" data-val="behavioral (STAR format)">Behavioral</div>
+            <div class="pill" data-val="product case">Product Case</div>
+            <div class="pill" data-val="strategy / operations">Strategy / Ops</div>
+            <div class="pill" data-val="introductory / tell me about yourself">Intro / Background</div>
+            <div class="pill" data-val="technical">Technical</div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Number of Q&As</label>
+          <div class="pill-row" id="interview-count-pills">
+            <div class="pill selected" data-val="5">5 questions</div>
+            <div class="pill" data-val="8">8 questions</div>
+            <div class="pill" data-val="10">10 questions</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" id="interview-btn" onclick="generate('interview')">
+            <span class="spinner" id="interview-spinner"></span>
+            <span id="interview-btn-text">Generate prep guide</span>
+          </button>
+        </div>
+        <div class="result-wrap" id="interview-result">
+          <div class="result-card">
+            <div class="result-head">
+              <span class="result-head-left">Interview Prep</span>
+              <div class="result-actions">
+                <button class="icon-btn" onclick="copyLatest('interview')">Copy</button>
+                <button class="icon-btn" onclick="resetPanel('interview')">Reset</button>
+              </div>
+            </div>
+            <div id="interview-iterations"></div>
+            <div class="refine-section">
+              <div class="refine-label">Drill deeper</div>
+              <div class="quick-refine">
+                <button class="qr-btn" onclick="quickRefine('interview', this)">Give me harder questions</button>
+                <button class="qr-btn" onclick="quickRefine('interview', this)">More specific examples</button>
+                <button class="qr-btn" onclick="quickRefine('interview', this)">Add salary negotiation tips</button>
+              </div>
+              <div class="refine-row">
+                <textarea class="refine-input" id="interview-refine-input" placeholder="Ask a follow-up or drill into a specific question…"></textarea>
+                <button class="refine-send" id="interview-refine-btn" onclick="refine('interview')">
+                  <span class="spinner" id="interview-fb-spinner"></span>
+                  Ask ↵
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-inner -->
+  </main>
+</div>
+
+<div class="toast" id="toast">✓ Copied to clipboard</div>
+
+<!-- Mammoth for .docx parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let userProfile = { name: '', title: '', background: '' };
+let userResumes  = [];   // [{ label, hint, content }]
+let apiKey       = '';
+let variantCount = 0;
+const histories  = {};
+
+// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+function loadSaved() {
+  try {
+    const p = localStorage.getItem('jaa_profile');
+    if (p) userProfile = JSON.parse(p);
+    const r = localStorage.getItem('jaa_resumes');
+    if (r) userResumes = JSON.parse(r);
+    const k = localStorage.getItem('jaa_api_key');
+    if (k) apiKey = k;
+  } catch(e) {}
+}
+
+function persistSave() {
+  localStorage.setItem('jaa_profile', JSON.stringify(userProfile));
+  localStorage.setItem('jaa_resumes', JSON.stringify(userResumes));
+  localStorage.setItem('jaa_api_key', apiKey);
+}
+
+// ─── POPULATE SETUP FORM FROM SAVED DATA ─────────────────────────────────────
+function populateSetupForm() {
+  if (apiKey) document.getElementById('setup-api-key').value = apiKey;
+  if (userProfile.name) document.getElementById('setup-name').value = userProfile.name;
+  if (userProfile.title) document.getElementById('setup-title').value = userProfile.title;
+  if (userProfile.background) document.getElementById('setup-background').value = userProfile.background;
+
+  // Render saved resume variants
+  document.getElementById('resume-variants-list').innerHTML = '';
+  variantCount = 0;
+  userResumes.forEach(v => addResumeVariant(v));
+}
+
+// ─── SAVE SETUP ───────────────────────────────────────────────────────────────
+function saveSetup() {
+  apiKey = document.getElementById('setup-api-key').value.trim();
+  userProfile.name       = document.getElementById('setup-name').value.trim();
+  userProfile.title      = document.getElementById('setup-title').value.trim();
+  userProfile.background = document.getElementById('setup-background').value.trim();
+
+  // Read resume variants from DOM
+  userResumes = [];
+  document.querySelectorAll('.resume-variant').forEach(card => {
+    const label   = card.querySelector('.rv-label').value.trim();
+    const hint    = card.querySelector('.rv-hint').value.trim();
+    const content = card.querySelector('.rv-content').value.trim();
+    if (label || content) userResumes.push({ label: label || 'Resume', hint, content });
+  });
+
+  persistSave();
+  updateUI();
+
+  const successEl = document.getElementById('setup-success');
+  successEl.style.display = 'block';
+  setTimeout(() => successEl.style.display = 'none', 4000);
+}
+
+function clearSetup() {
+  if (!confirm('Clear all saved profile data?')) return;
+  localStorage.removeItem('jaa_profile');
+  localStorage.removeItem('jaa_resumes');
+  localStorage.removeItem('jaa_api_key');
+  userProfile = { name: '', title: '', background: '' };
+  userResumes = [];
+  apiKey = '';
+  populateSetupForm();
+  updateUI();
+}
+
+// ─── UPDATE GLOBAL UI STATE ──────────────────────────────────────────────────
+function updateUI() {
+  const hasProfile  = !!(userProfile.background || userProfile.name);
+  const hasApiKey   = !!apiKey;
+  const isComplete  = hasProfile && hasApiKey;
+
+  // Sidebar profile chip
+  const name = userProfile.name || 'Your Profile';
+  const title = userProfile.title || 'No title set';
+  const initials = userProfile.name
+    ? userProfile.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
+    : '?';
+
+  document.getElementById('sidebar-avatar').textContent = initials;
+  document.getElementById('sidebar-name').textContent   = name;
+  document.getElementById('sidebar-role').textContent   = title;
+
+  // Setup status dot
+  const dot = document.getElementById('setup-status-dot');
+  dot.className = 'status-dot ' + (isComplete ? 'complete' : 'incomplete');
+
+  // Warning banners in tool panels
+  const tools = ['tailor','cover','outreach','gap','interview'];
+  tools.forEach(t => {
+    const w = document.getElementById(t + '-warning');
+    if (w) w.style.display = isComplete ? 'none' : 'block';
+  });
+
+  // Tailor info box
+  const infoBox = document.getElementById('tailor-info-box');
+  if (infoBox) {
+    infoBox.style.display = hasProfile ? 'block' : 'none';
+    const summary = document.getElementById('tailor-profile-summary');
+    if (summary) {
+      const wordCount = (userProfile.background || '').split(/\s+/).filter(Boolean).length;
+      const resumeInfo = userResumes.length > 0
+        ? ` ${userResumes.length} resume variant${userResumes.length > 1 ? 's' : ''} available.`
+        : ' No resume variants added.';
+      summary.textContent = `${userProfile.name || 'Your background'} · ${wordCount} words of context.${resumeInfo}`;
+    }
+  }
+
+  // Populate resume selector in Tailor panel
+  const select = document.getElementById('tailor-resume-select');
+  if (select) {
+    select.innerHTML = '<option value="__background__">Use my full background context</option>';
+    userResumes.forEach((r, i) => {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = r.label;
+      select.appendChild(opt);
+    });
+    updateResumeBadge();
+  }
+}
+
+// ─── FILE UPLOADS ──────────────────────────────────────────────────────────────
+async function handleBgUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const text = await extractTextFromFile(file);
+  if (text) {
+    document.getElementById('setup-background').value = text;
+    const zone = document.getElementById('bg-upload-zone');
+    zone.classList.add('has-file');
+    document.getElementById('bg-upload-title').textContent = '✓ ' + file.name;
+    showToast('File loaded successfully');
+  }
+}
+
+async function handleVariantUpload(input, index) {
+  const file = input.files[0];
+  if (!file) return;
+  const text = await extractTextFromFile(file);
+  if (text) {
+    const card = document.querySelector(`.resume-variant[data-index="${index}"]`);
+    if (card) {
+      card.querySelector('.rv-content').value = text;
+      const zone = card.querySelector('.upload-zone');
+      if (zone) {
+        zone.classList.add('has-file');
+        zone.querySelector('.uz-title').textContent = '✓ ' + file.name;
+      }
+    }
+    showToast('Resume loaded');
+  }
+}
+
+async function extractTextFromFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'txt') {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = e => res(e.target.result);
+      reader.onerror = () => rej(new Error('Failed to read file'));
+      reader.readAsText(file);
+    });
+  }
+
+  if (ext === 'docx') {
+    if (typeof mammoth === 'undefined') {
+      showToast('⚠ .docx library not loaded. Try .txt instead.');
+      return null;
+    }
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = async e => {
+        try {
+          const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+          res(result.value);
+        } catch(err) { rej(err); }
+      };
+      reader.onerror = () => rej(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  showToast('⚠ Unsupported file type. Use .docx or .txt');
+  return null;
+}
+
+// ─── RESUME VARIANTS ──────────────────────────────────────────────────────────
+function addResumeVariant(data = null) {
+  const MAX = 6;
+  const list = document.getElementById('resume-variants-list');
+  if (list.querySelectorAll('.resume-variant').length >= MAX) {
+    showToast(`Maximum ${MAX} resume variants`);
+    return;
+  }
+  const idx = variantCount++;
+  const card = document.createElement('div');
+  card.className = 'resume-variant';
+  card.dataset.index = idx;
+  card.innerHTML = `
+    <div class="resume-variant-header">
+      <span class="resume-variant-title">Resume Variant ${list.querySelectorAll('.resume-variant').length + 1}</span>
+      <button class="btn-ghost" onclick="removeResumeVariant(this)">× Remove</button>
+    </div>
+    <div class="resume-variant-body">
+      <div class="field">
+        <label class="field-label">Label</label>
+        <input type="text" class="rv-label" placeholder="e.g. Product Manager Resume" value="${escHtml(data?.label || '')}">
+      </div>
+      <div class="field">
+        <label class="field-label">Short description (shown as a hint)</label>
+        <input type="text" class="rv-hint" placeholder="e.g. Focused on product lifecycle and roadmap ownership" value="${escHtml(data?.hint || '')}">
+      </div>
+      <div class="field">
+        <label class="field-label">Resume Content</label>
+        <div class="upload-zone" onclick="this.nextElementSibling.click()">
+          <span class="uz-icon">📄</span>
+          <div class="uz-text">
+            <div class="uz-title">Upload resume file (.docx or .txt)</div>
+            <div class="uz-sub">Or paste the text below</div>
+          </div>
+        </div>
+        <input type="file" accept=".docx,.txt" style="display:none" onchange="handleVariantUpload(this, ${idx})">
+        <textarea class="rv-content" rows="6" placeholder="Paste this resume's full text here…">${escHtml(data?.content || '')}</textarea>
+      </div>
+    </div>
+  `;
+  list.appendChild(card);
+}
+
+function removeResumeVariant(btn) {
+  btn.closest('.resume-variant').remove();
+  // Renumber headers
+  document.querySelectorAll('.resume-variant').forEach((card, i) => {
+    card.querySelector('.resume-variant-title').textContent = `Resume Variant ${i + 1}`;
+  });
+}
+
+// ─── API KEY TOGGLE ───────────────────────────────────────────────────────────
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('setup-api-key');
+  const btn   = document.getElementById('api-key-toggle-btn');
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+  else { input.type = 'password'; btn.textContent = 'Show'; }
+}
+
+// ─── PILL MANAGEMENT ──────────────────────────────────────────────────────────
+document.querySelectorAll('.pill-row').forEach(row => {
+  const isMulti = row.id.includes('emphasis');
+  row.querySelectorAll('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      if (isMulti) { pill.classList.toggle('selected'); }
+      else { row.querySelectorAll('.pill').forEach(p => p.classList.remove('selected')); pill.classList.add('selected'); }
+    });
+  });
+});
+
+function getSelected(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return '';
+  return [...row.querySelectorAll('.pill.selected')].map(p => p.dataset.val).join(', ');
+}
+
+// ─── MODE SWITCHING ───────────────────────────────────────────────────────────
+function switchMode(mode) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + mode).classList.add('active');
+  document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+  if (mode === 'setup') populateSetupForm();
+  closeSidebar();
+}
+
+// ─── PROFILE CONTEXT BUILDER ──────────────────────────────────────────────────
+function buildProfileContext() {
+  const name = userProfile.name || 'the user';
+  return `${name.toUpperCase()} — PROFESSIONAL PROFILE
+(Use all of this to inform outputs. Never fabricate. Reframe and emphasise real experience only.)
+
+${userProfile.title ? `CURRENT/RECENT TITLE: ${userProfile.title}\n\n` : ''}BACKGROUND:
+${userProfile.background || '[No background provided — ask the user to complete their profile setup.]'}`.trim();
+}
+
+// ─── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
+function getSystemPrompt(mode) {
+  const name = userProfile.name || 'the user';
+  const profile = buildProfileContext();
+  const base = `You are a highly skilled job application strategist working exclusively for ${name}. You have deep knowledge of their full professional profile:\n\n${profile}\n\n`;
+
+  const prompts = {
+    tailor: base + `Your job: Given a resume version (or general background) and a job description, rewrite the person's experience as tight, ATS-friendly bullet points that directly address what the employer wants.
+Rules:
+- PRIORITISE the specific resume version if provided — use its framing as the foundation
+- Only draw from the broader background profile if the resume is missing something directly relevant to the JD
+- Never fabricate — only reframe real experience
+- Use strong action verbs and quantify wherever possible
+- Group bullets by role/period
+- Lead with the most relevant bullets for the target role
+- Include 3–6 bullets per role, fewer for earlier roles
+- Output ONLY the bullet points, formatted cleanly. No preamble.`,
+
+    cover: base + `Your job: Write a personalised, compelling cover letter for ${name}.
+Rules:
+- Open with a hook specific to the company/role — NOT "I am excited to apply"
+- Connect their specific background to what the company needs
+- Don't list every achievement — pick the 2–3 most relevant
+- Sound like a real person, not a template
+- Close with a specific, confident call to action
+- Output ONLY the letter body (no date, address block). Start with the salutation.`,
+
+    outreach: base + `Your job: Write a tight, non-generic outreach message for ${name}.
+Rules:
+- Start with something specific about the recipient, not "I came across your profile"
+- Be direct about the ask but don't be pushy
+- Show relevant value in 1–2 sentences — don't paste a resume
+- For LinkedIn DMs: keep under 300 characters, punchy
+- For emails: subject line first, then body
+- Sound human, confident, specific
+- Output ONLY the message (include subject line if email). No preamble.`,
+
+    gap: base + `Your job: Provide an honest gap analysis of ${name}'s fit for the described role.
+Format:
+1. OVERALL FIT: X/10 with 1-sentence summary
+2. STRONG MATCHES: 4–6 bullet points where their background directly maps to requirements
+3. PARTIAL MATCHES: 2–3 areas where they have adjacent but not exact experience
+4. GAPS / RISKS: 2–4 honest gaps — don't sugarcoat
+5. RECOMMENDED FRAMING: How they should position themselves for this role (2–3 specific tactics)
+Be direct and useful. They want honest assessment, not false confidence.`,
+
+    interview: base + `Your job: Generate interview Q&As tailored to the role and round type.
+For each question:
+- State the likely question
+- Give ${name} a strong, specific answer using their real experience (STAR format for behavioral)
+- Keep answers tight — 3–5 sentences max per answer
+- Pull from real projects and achievements from their profile
+Format clearly as Q1, Q2, etc. Output ONLY the Q&As. No preamble.`
+  };
+
+  return prompts[mode] || base;
+}
+
+// ─── BUILD USER MESSAGE ───────────────────────────────────────────────────────
+function buildUserMessage(mode) {
+  const g = id => (document.getElementById(id) || {}).value?.trim() || '';
+
+  if (mode === 'tailor') {
+    const jd = g('tailor-jd');
+    if (!jd) return null;
+    const role     = getSelected('tailor-role-pills');
+    const emphasis = getSelected('tailor-emphasis-pills');
+    const notes    = g('tailor-notes');
+    const selVal   = document.getElementById('tailor-resume-select').value;
+    let resumeSection = '';
+    if (selVal === '__background__') {
+      resumeSection = `Using: Full background context (see system prompt)`;
+    } else {
+      const idx = parseInt(selVal);
+      const rv  = userResumes[idx];
+      if (rv) resumeSection = `SELECTED RESUME (${rv.label}):\n${rv.content}`;
+    }
+    return `${resumeSection}\n\n---\nTarget role type: ${role}\nEmphasise: ${emphasis}\n${notes ? `Notes: ${notes}\n` : ''}\nJOB DESCRIPTION:\n${jd}`;
+  }
+
+  if (mode === 'cover') {
+    const jd = g('cover-jd'), role = g('cover-role');
+    if (!jd && !role) return null;
+    return `Company: ${g('cover-company') || 'not specified'}\nRole: ${role || 'not specified'}\nTone: ${getSelected('cover-tone-pills')}\nLength: ${getSelected('cover-length-pills')}\n${g('cover-why') ? `Why this role/company: ${g('cover-why')}\n` : ''}\nJOB DESCRIPTION:\n${jd}`;
+  }
+
+  if (mode === 'outreach') {
+    const context = g('outreach-context');
+    if (!context) return null;
+    return `Channel: ${getSelected('outreach-channel-pills')}\nRecipient: ${getSelected('outreach-recipient-pills')}\nAsk: ${getSelected('outreach-ask-pills')}\nRecipient context: ${context}\n${g('outreach-hook') ? `Hook/connection: ${g('outreach-hook')}` : ''}`;
+  }
+
+  if (mode === 'gap') {
+    const jd = g('gap-jd');
+    if (!jd) return null;
+    return `Target role type: ${getSelected('gap-role-pills')}\n\nJOB DESCRIPTION:\n${jd}`;
+  }
+
+  if (mode === 'interview') {
+    const jd = g('interview-jd');
+    if (!jd) return null;
+    return `Interview type: ${getSelected('interview-type-pills')}\nNumber of Q&As: ${getSelected('interview-count-pills')}\n\nROLE / JD:\n${jd}`;
+  }
+
+  return null;
+}
+
+// ─── GENERATE ─────────────────────────────────────────────────────────────────
+async function generate(mode) {
+  if (!apiKey) { showToast('⚠ Add your Gemini API key in Setup first'); switchMode('setup'); return; }
+  if (!userProfile.background && !userProfile.name) { showToast('⚠ Complete your profile setup first'); switchMode('setup'); return; }
+
+  const userMsg = buildUserMessage(mode);
+  if (!userMsg) {
+    const focusId = { tailor: 'tailor-jd', cover: 'cover-jd', outreach: 'outreach-context', gap: 'gap-jd', interview: 'interview-jd' }[mode];
+    if (focusId) document.getElementById(focusId).focus();
+    return;
+  }
+
+  histories[mode] = [{ role: 'user', content: userMsg }];
+  document.getElementById(mode + '-iterations').innerHTML = '';
+  setLoading(mode, true);
+  document.getElementById(mode + '-result').classList.add('visible');
+
+  const text = await callAPI(mode, histories[mode]);
+  if (text) {
+    histories[mode].push({ role: 'assistant', content: text });
+    addIteration(mode, text, 1, true);
+  }
+  setLoading(mode, false);
+}
+
+// ─── REFINE ───────────────────────────────────────────────────────────────────
+async function refine(mode) {
+  const input = document.getElementById(mode + '-refine-input');
+  const fb = input.value.trim();
+  if (!fb || !histories[mode]?.length) return;
+  input.value = '';
+
+  document.querySelectorAll(`#${mode}-iterations .history-item`).forEach(el => {
+    el.querySelector('.version-badge')?.classList.remove('latest');
+    el.querySelector('.history-body')?.classList.add('stale');
+  });
+
+  addFeedbackBubble(mode, fb);
+  histories[mode].push({ role: 'user', content: fb });
+
+  setRefining(mode, true);
+  const text = await callAPI(mode, histories[mode]);
+  if (text) {
+    histories[mode].push({ role: 'assistant', content: text });
+    const ver = histories[mode].filter(m => m.role === 'assistant').length;
+    addIteration(mode, text, ver, true);
+  }
+  setRefining(mode, false);
+  input.focus();
+}
+
+function quickRefine(mode, btn) {
+  document.getElementById(mode + '-refine-input').value = btn.textContent;
+  refine(mode);
+}
+
+// ─── API CALL (Gemini) ────────────────────────────────────────────────────────
+async function callAPI(mode, messages) {
+  try {
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: getSystemPrompt(mode) }]
+          },
+          contents: messages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+          })),
+          generationConfig: {
+            maxOutputTokens: 1500,
+            temperature: 0.7
+          }
+        })
+      }
+    );
+    const data = await response.json();
+    if (data.error) return `Error: ${data.error.message}`;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch (err) {
+    return `Error: ${err.message}`;
+  }
+}
+
+// ─── DOM HELPERS ──────────────────────────────────────────────────────────────
+function addIteration(mode, text, ver, isCurrent) {
+  const container = document.getElementById(mode + '-iterations');
+  const div = document.createElement('div');
+  div.className = 'history-item';
+  div.dataset.text = text;
+  div.innerHTML = `
+    <div class="history-head">
+      <span class="version-badge ${isCurrent ? 'latest' : ''}">v${ver}${isCurrent ? ' · latest' : ''}</span>
+      <button class="icon-btn" onclick="copyIteration(this)">Copy</button>
+    </div>
+    <div class="history-body ${isCurrent ? '' : 'stale'}"></div>
+  `;
+  container.appendChild(div);
+  const body = div.querySelector('.history-body');
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i < text.length) { body.textContent = text.slice(0, ++i); }
+    else { clearInterval(iv); }
+  }, 5);
+  div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function addFeedbackBubble(mode, text) {
+  const container = document.getElementById(mode + '-iterations');
+  const div = document.createElement('div');
+  div.className = 'feedback-bubble';
+  div.innerHTML = `<span class="fb-you">You</span><span class="fb-text">${escHtml(text)}</span>`;
+  container.appendChild(div);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyIteration(btn) {
+  const text = btn.closest('.history-item').dataset.text;
+  if (text) navigator.clipboard.writeText(text).then(showToast);
+}
+
+function copyLatest(mode) {
+  const items = document.querySelectorAll(`#${mode}-iterations .history-item`);
+  if (items.length) navigator.clipboard.writeText(items[items.length - 1].dataset.text || '').then(showToast);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = typeof msg === 'string' ? msg : '✓ Copied to clipboard';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function resetPanel(mode) {
+  histories[mode] = [];
+  document.getElementById(mode + '-iterations').innerHTML = '';
+  document.getElementById(mode + '-result').classList.remove('visible');
+  const ids = {
+    tailor: ['tailor-jd','tailor-notes'],
+    cover: ['cover-company','cover-role','cover-jd','cover-why'],
+    outreach: ['outreach-context','outreach-hook'],
+    gap: ['gap-jd'],
+    interview: ['interview-jd']
+  };
+  (ids[mode] || []).forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  // Also clear URL fetch inputs and status
+  const urlEl = document.getElementById(mode + '-jd-url');
+  if (urlEl) { urlEl.value = ''; urlEl.classList.remove('success','error'); }
+  const statusEl = document.getElementById(mode + '-jd-status');
+  if (statusEl) { statusEl.textContent = ''; statusEl.className = 'jd-fetch-status'; }
+}
+
+function setLoading(mode, on) {
+  const btn = document.getElementById(mode + '-btn');
+  const spinner = document.getElementById(mode + '-spinner');
+  const txt = document.getElementById(mode + '-btn-text');
+  const labels = { tailor: 'Generate tailored bullets', cover: 'Write cover letter', outreach: 'Write outreach', gap: 'Analyse fit & gaps', interview: 'Generate prep guide' };
+  if (btn) btn.disabled = on;
+  if (spinner) spinner.style.display = on ? 'block' : 'none';
+  if (txt) txt.textContent = on ? 'Generating…' : (labels[mode] || 'Generate');
+}
+
+function setRefining(mode, on) {
+  const btn = document.getElementById(mode + '-refine-btn');
+  const spinner = document.getElementById(mode + '-fb-spinner');
+  if (btn) btn.disabled = on;
+  if (spinner) spinner.style.display = on ? 'block' : 'none';
+}
+
+// ─── RESUME BADGE ─────────────────────────────────────────────────────────────
+function updateResumeBadge() {
+  const val = document.getElementById('tailor-resume-select').value;
+  const badge = document.getElementById('resume-badge-text');
+  if (!badge) return;
+  if (val === '__background__') {
+    badge.textContent = 'Your full professional background will be used.';
+  } else {
+    const rv = userResumes[parseInt(val)];
+    badge.textContent = rv?.hint || rv?.label || 'Selected resume variant.';
+  }
+}
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────────────────────────
+['tailor','cover','outreach','gap','interview'].forEach(mode => {
+  const input = document.getElementById(mode + '-refine-input');
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); refine(mode); }
+    });
+  }
+});
+
+// ─── JD URL FETCH ─────────────────────────────────────────────────────────────
+
+async function fetchJD(urlInputId, textareaId, statusId) {
+  const urlInput  = document.getElementById(urlInputId);
+  const textarea  = document.getElementById(textareaId);
+  const statusEl  = document.getElementById(statusId);
+  const btnSpinner = document.getElementById(urlInputId.replace('-url', '-spinner'));
+  const btnText    = document.getElementById(urlInputId.replace('-url', '-btn-text'));
+  const btn        = urlInput.closest('.field').querySelector('.jd-fetch-btn');
+
+  const url = urlInput.value.trim();
+  if (!url) { urlInput.focus(); return; }
+
+  // Validate it looks like a URL
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    showFetchStatus(statusEl, 'error', '⚠ Please enter a full URL starting with https://');
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  if (btnSpinner) btnSpinner.style.display = 'block';
+  if (btnText) btnText.textContent = 'Fetching…';
+  urlInput.classList.remove('success', 'error');
+  if (statusEl) statusEl.className = 'jd-fetch-status';
+
+  try {
+    const { text, warning } = await fetchJobDescription(url);
+    textarea.value = text;
+    textarea.dispatchEvent(new Event('input'));
+    urlInput.classList.add('success');
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const domain    = getDomain(url);
+    const msg = warning
+      ? `⚠ ${warning}`
+      : `✓ Fetched ~${wordCount} words from ${domain}. Review the text below and trim if needed.`;
+    showFetchStatus(statusEl, warning ? 'error' : 'success', msg);
+    if (!warning) textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (err) {
+    urlInput.classList.add('error');
+    showFetchStatus(statusEl, 'error', `⚠ ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    if (btnSpinner) btnSpinner.style.display = 'none';
+    if (btnText) btnText.textContent = 'Fetch ↓';
+  }
+}
+
+function showFetchStatus(el, type, msg) {
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'jd-fetch-status ' + type;
+}
+
+async function fetchJobDescription(url) {
+  const domain = getDomain(url).toLowerCase();
+
+  // LinkedIn jobs need a login — give a helpful specific message
+  if (domain.includes('linkedin.com')) {
+    // Try anyway but warn the user that it often requires login
+    try {
+      const result = await tryFetch(url);
+      const text = extractJDText(result, url);
+      if (text.length > 300) return { text };
+    } catch(e) {}
+    throw new Error(
+      'LinkedIn job pages usually require you to be logged in. ' +
+      'Open the listing, click "Show more" on the description, then copy and paste the text below.'
+    );
+  }
+
+  const html = await tryFetch(url);
+  const text  = extractJDText(html, url);
+
+  if (text.length < 150) {
+    throw new Error(
+      'Not enough content found on this page — it may require a login or use JavaScript rendering. ' +
+      'Try copy-pasting the job description directly below.'
+    );
+  }
+
+  // Warn if content seems too long (caught entire page)
+  const wordCount = text.split(/\s+/).length;
+  if (wordCount > 2000) {
+    return {
+      text,
+      warning: `Got ${wordCount} words — may include extra page content. Scroll down to trim the text to just the job description.`
+    };
+  }
+
+  return { text };
+}
+
+async function tryFetch(url) {
+  // Try two CORS proxies in sequence
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+  ];
+
+  for (const proxyUrl of proxies) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) continue;
+      if (proxyUrl.includes('allorigins')) {
+        const data = await res.json();
+        if (data.contents) return data.contents;
+      } else {
+        const text = await res.text();
+        if (text) return text;
+      }
+    } catch(e) {
+      clearTimeout(timer);
+      if (e.name === 'AbortError') continue; // try next proxy
+    }
+  }
+  throw new Error('Could not reach this URL. It may be behind a login or CORS-restricted. Try pasting the JD below instead.');
+}
+
+function extractJDText(html, url) {
+  const parser = new DOMParser();
+  const doc    = parser.parseFromString(html, 'text/html');
+
+  // Strip noise
+  ['script','style','nav','header','footer','aside','noscript','iframe',
+   '[role="banner"]','[role="navigation"]','[role="complementary"]',
+   '.cookie-banner','.site-header','.site-footer'].forEach(sel => {
+    try { doc.querySelectorAll(sel).forEach(el => el.remove()); } catch(e) {}
+  });
+
+  const domain = getDomain(url).toLowerCase();
+
+  // Site-specific selectors (ordered most → least specific)
+  const siteMap = {
+    'linkedin.com':     ['.description__text','.show-more-less-html__markup','[class*="description"]'],
+    'indeed.com':       ['#jobDescriptionText','.jobsearch-jobDescriptionText','[class*="job-description"]'],
+    'instahyre.com':    ['.job-detail-description','[class*="description"]','[class*="job-detail"]'],
+    'weekday.works':    ['[class*="job-description"]','[class*="description"]','main'],
+    'greenhouse.io':    ['#content','[class*="job"]','main'],
+    'lever.co':         ['.posting-description','[class*="description"]','main'],
+    'workday.com':      ['[data-automation-id="jobPostingDescription"]','[class*="description"]'],
+    'jobs.ashbyhq.com': ['[class*="description"]','[class*="job"]','main'],
+    'wellfound.com':    ['[class*="description"]','[class*="job-detail"]','main'],
+  };
+
+  const genericSelectors = [
+    '[class*="job-description"]', '[id*="job-description"]',
+    '[class*="jobDescription"]',  '[id*="jobDescription"]',
+    '[class*="job-details"]',     '[id*="job-details"]',
+    '[class*="job_description"]', '[class*="posting-body"]',
+    '[class*="description__text"]','[class*="job-post"]',
+    'article', 'main',
+  ];
+
+  // Pick selectors for this domain
+  const domainSelectors = Object.entries(siteMap).find(([d]) => domain.includes(d))?.[1] || [];
+  const selectors = [...domainSelectors, ...genericSelectors];
+
+  for (const sel of selectors) {
+    try {
+      const el = doc.querySelector(sel);
+      if (el) {
+        const t = cleanJDText(el.textContent);
+        if (t.length > 150) return t;
+      }
+    } catch(e) {}
+  }
+
+  // Last resort: full body
+  return cleanJDText(doc.body?.textContent || '');
+}
+
+function cleanJDText(text) {
+  return text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\n{4,}/g, '\n\n\n')
+    .replace(/[ \t]{3,}/g, '  ')
+    .replace(/^\s+|\s+$/g, '')
+    .trim();
+}
+
+function getDomain(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); }
+  catch { return url; }
+}
+
+// ─── SIDEBAR TOGGLE ───────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const btn      = document.getElementById('hamburger-btn');
+  const isOpen   = sidebar.classList.contains('open');
+  isOpen ? closeSidebar() : openSidebar();
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-backdrop').classList.add('visible');
+  document.getElementById('hamburger-btn').classList.add('open');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('visible');
+  document.getElementById('hamburger-btn').classList.remove('open');
+}
+
+
+loadSaved();
+updateUI();
+
+// If no profile, start on setup; otherwise start on home
+const isFirstTime = !userProfile.background && !apiKey;
+switchMode(isFirstTime ? 'setup' : 'home');
+if (isFirstTime) populateSetupForm();
+</script>
+</body>
+</html>
