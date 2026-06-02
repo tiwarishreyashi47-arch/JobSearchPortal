@@ -183,14 +183,24 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 .resume-badge .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
 
 /* Setup panel — file upload zone */
-.upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; background: white; margin-bottom: 8px; }
+.upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; background: white; margin-bottom: 8px; }
 .upload-zone:hover { border-color: var(--gold); background: var(--gold-light); }
 .upload-zone.has-file { border-color: var(--green); border-style: solid; background: var(--green-light); }
-.upload-zone .uz-icon { font-size: 20px; flex-shrink: 0; }
+.upload-zone.has-file:hover { border-color: #2a7a4e; background: #d4eddf; }
+.upload-zone .uz-icon { font-size: 20px; flex-shrink: 0; transition: all 0.2s; }
 .upload-zone .uz-text { flex: 1; }
 .upload-zone .uz-title { font-size: 13px; font-weight: 500; color: var(--ink); }
 .upload-zone .uz-sub { font-size: 12px; color: var(--muted); }
-.upload-zone.has-file .uz-title { color: var(--green); }
+.upload-zone.has-file .uz-title { color: #1e5c3a; font-weight: 600; }
+.upload-zone.has-file .uz-sub { color: #3a8c5c; }
+/* File chip — shown below upload zone after successful upload */
+.file-chip { display: flex; align-items: center; gap: 8px; margin-top: -2px; margin-bottom: 10px; padding: 8px 14px; background: var(--green-light); border: 1px solid #9fcfb2; border-radius: var(--radius); animation: chipIn 0.2s ease; }
+@keyframes chipIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.file-chip .chip-icon { font-size: 14px; flex-shrink: 0; }
+.file-chip .chip-name { font-size: 12px; font-weight: 600; color: #1e5c3a; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-chip .chip-words { font-size: 11px; color: #3a8c5c; white-space: nowrap; }
+.file-chip .chip-replace { background: none; border: none; font-size: 11px; color: #3a8c5c; cursor: pointer; padding: 2px 6px; border-radius: 4px; text-decoration: underline; white-space: nowrap; font-family: var(--sans); transition: color 0.15s; }
+.file-chip .chip-replace:hover { color: var(--red); }
 
 /* Setup section cards */
 .setup-section { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 18px; }
@@ -228,6 +238,13 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 /* Divider */
 .divider { height: 1px; background: var(--border); margin: 28px 0; }
 
+/* Cache status indicator */
+.cache-status { font-size: 12px; margin-top: 10px; padding: 8px 12px; border-radius: var(--radius); display: none; }
+.cache-status.visible { display: block; }
+.cache-status.cache-ok      { background: var(--green-light); color: #1e5c3a; border: 1px solid #9fcfb2; }
+.cache-status.cache-warn    { background: var(--cream); color: var(--muted); border: 1px solid var(--border); }
+.cache-status.cache-creating{ background: var(--gold-light); color: #7a4e10; border: 1px solid #e0c07a; }
+
 /* Toast */
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); border-radius: 8px; padding: 10px 18px; font-size: 13px; color: white; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 999; font-family: var(--sans); }
 .toast.show { opacity: 1; transform: translateY(0); }
@@ -251,6 +268,67 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 .jd-fetch-status { font-size: 12px; line-height: 1.5; margin-top: 7px; display: none; padding: 7px 12px; border-radius: var(--radius); }
 .jd-fetch-status.success { display: block; background: var(--green-light); color: #1e5c3a; border: 1px solid #9fcfb2; }
 .jd-fetch-status.error { display: block; background: var(--red-light); color: #7a2020; border: 1px solid #e0a0a0; }
+/* ── JOB TRACKER ─────────────────────────────────────────────────────────── */
+.tracker-stats { display: flex; flex-wrap: wrap; background: white; border: 1px solid var(--border); border-radius: 10px; padding: 6px 0; margin-bottom: 20px; }
+.tracker-stat { display: flex; flex-direction: column; align-items: center; padding: 14px 24px; border-right: 1px solid var(--border); flex: 1; min-width: 80px; }
+.tracker-stat:last-child { border-right: none; }
+.tracker-stat .stat-num { font-family: var(--serif); font-size: 1.75rem; color: var(--ink); line-height: 1; }
+.tracker-stat .stat-lbl { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin-top: 4px; }
+.tracker-stat.s-interview .stat-num { color: #7c3aed; }
+.tracker-stat.s-offer .stat-num     { color: var(--green); }
+.tracker-stat.s-rejected .stat-num  { color: var(--red); }
+.tracker-table-wrap { border: 1px solid var(--border); border-radius: 10px; background: white; overflow: hidden; overflow-x: auto; }
+.tracker-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tracker-table thead th { background: var(--cream); border-bottom: 2px solid var(--border); padding: 10px 10px; text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; position: relative; }
+.tracker-table td { border-bottom: 1px solid var(--border); padding: 3px 4px; vertical-align: middle; }
+.tracker-table tr:last-child td { border-bottom: none; }
+.tracker-table tbody tr:hover td { background: #fafaf8; }
+.tracker-table tbody tr:hover .row-del { opacity: 1; }
+/* Ghost inputs — invisible until touched */
+.t-inp { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 5px 8px; font-family: var(--sans); font-size: 13px; width: 100%; color: var(--ink); transition: border-color 0.15s, background 0.15s; min-width: 0; box-sizing: border-box; }
+.t-inp:hover { border-color: var(--border); background: white; }
+.t-inp:focus { border-color: var(--gold); background: white; outline: none; box-shadow: 0 0 0 2px rgba(201,150,60,0.12); }
+.t-inp[type="date"] { color-scheme: light; min-width: 130px; }
+.t-sel { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 5px 8px; font-family: var(--sans); font-size: 13px; width: 100%; color: var(--ink); cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; transition: border-color 0.15s; }
+.t-sel:hover { border-color: var(--border); background: white; }
+.t-sel:focus { border-color: var(--gold); background: white; outline: none; box-shadow: 0 0 0 2px rgba(201,150,60,0.12); }
+/* Stage pill select */
+.stage-sel { border: none; border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; text-align: center; font-family: var(--sans); transition: opacity 0.15s; outline: none; white-space: nowrap; }
+.stage-sel:focus { box-shadow: 0 0 0 2px rgba(201,150,60,0.3); }
+/* Row delete */
+.row-del { background: none; border: none; color: #b0a898; font-size: 15px; cursor: pointer; padding: 4px 8px; border-radius: 4px; opacity: 0; transition: all 0.15s; line-height: 1; }
+.row-del:hover { color: var(--red); background: var(--red-light); }
+/* Custom column header */
+.th-custom { min-width: 130px; }
+.col-del-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 1px 4px; border-radius: 3px; margin-left: 4px; opacity: 0; transition: all 0.15s; line-height: 1; vertical-align: middle; }
+.tracker-table th:hover .col-del-btn { opacity: 1; }
+.col-del-btn:hover { color: var(--red); }
+/* Add row */
+.tracker-add-row { display: flex; align-items: center; gap: 8px; padding: 11px 18px; color: var(--muted); font-size: 13px; cursor: pointer; background: none; border: none; font-family: var(--sans); transition: all 0.15s; width: 100%; text-align: left; border-top: 1px solid var(--border); }
+.tracker-add-row:hover { color: var(--ink); background: var(--cream); }
+/* Footer */
+.tracker-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
+.tracker-io-note { font-size: 12px; color: var(--muted); }
+.tracker-io { display: flex; gap: 8px; }
+/* Add column button in header */
+.btn-add-col { background: none; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--muted); font-family: var(--sans); font-size: 11px; padding: 3px 10px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn-add-col:hover { border-color: var(--gold); color: #7a4e10; background: var(--gold-light); }
+/* Empty state */
+.tracker-empty { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 13px; line-height: 1.8; }
+.tracker-empty .empty-icon { font-size: 28px; margin-bottom: 10px; }
+/* Column modal */
+.col-modal-overlay { position: fixed; inset: 0; background: rgba(15,13,10,0.42); z-index: 300; display: none; align-items: center; justify-content: center; }
+.col-modal-overlay.open { display: flex; }
+.col-modal { background: white; border-radius: 12px; padding: 28px; width: 380px; max-width: 92vw; box-shadow: 0 24px 64px rgba(0,0,0,0.16); }
+.col-modal h3 { font-family: var(--serif); font-size: 1.2rem; margin-bottom: 20px; color: var(--ink); }
+.col-modal .m-lbl { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; display: block; }
+.col-modal .m-inp { width: 100%; background: white; border: 1px solid var(--border); border-radius: var(--radius); color: var(--ink); font-family: var(--sans); font-size: 14px; padding: 9px 14px; outline: none; transition: border-color 0.15s; margin-bottom: 16px; box-sizing: border-box; }
+.col-modal .m-inp:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,150,60,0.15); }
+.col-modal .type-pills { display: flex; gap: 6px; margin-bottom: 16px; }
+.col-modal .type-pill { background: white; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 12px; font-weight: 500; padding: 5px 16px; cursor: pointer; transition: all 0.15s; user-select: none; }
+.col-modal .type-pill.selected { background: var(--gold-light); border-color: var(--gold); color: #7a4e10; font-weight: 600; }
+.col-modal .opts-field { display: none; margin-bottom: 16px; }
+.col-modal .opts-field.visible { display: block; }
 </style>
 </head>
 <body>
@@ -300,6 +378,9 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
       </button>
       <button class="mode-btn" data-mode="interview" onclick="switchMode('interview')">
         <span class="icon">◈</span> Interview Prep
+      </button>
+      <button class="mode-btn" data-mode="tracker" onclick="switchMode('tracker')">
+        <span class="icon">⊞</span> Job Tracker
       </button>
     </div>
 
@@ -420,6 +501,7 @@ Example things to include:
           </button>
           <button class="btn-secondary" onclick="clearSetup()">Clear all data</button>
         </div>
+        <div class="cache-status" id="cache-status"></div>
       </div>
 
       <!-- ═══════════════════════════════════ HOME ═══ -->
@@ -898,7 +980,63 @@ Example things to include:
       </div>
 
     </div><!-- /main-inner -->
+
+      <!-- ══════════════════════════════════ TRACKER ═══ -->
+      <div class="panel" id="panel-tracker" style="display:none; padding: 40px 40px 80px 64px; max-width: 100%;">
+        <div class="page-header">
+          <h2>Job Tracker</h2>
+          <p>Every application in one place. Saved locally — export to back up or move to another device.</p>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="tracker-stats" id="tracker-stats"></div>
+
+        <!-- Table -->
+        <div class="tracker-table-wrap">
+          <table class="tracker-table">
+            <thead id="tracker-thead"></thead>
+            <tbody id="tracker-tbody"></tbody>
+          </table>
+          <button class="tracker-add-row" onclick="addJob()">＋ Add application</button>
+        </div>
+
+        <!-- Footer -->
+        <div class="tracker-footer">
+          <span class="tracker-io-note">💾 Saved in this browser · export to move to another device</span>
+          <div class="tracker-io">
+            <button class="btn-secondary" onclick="exportTracker()">↓ Export JSON</button>
+            <button class="btn-secondary" onclick="document.getElementById('tracker-import-input').click()">↑ Import JSON</button>
+            <input type="file" id="tracker-import-input" accept=".json" style="display:none" onchange="importTracker(this)">
+          </div>
+        </div>
+      </div>
+
   </main>
+</div>
+
+<!-- Add Column Modal -->
+<div class="col-modal-overlay" id="col-modal-overlay" onclick="handleModalOverlayClick(event)">
+  <div class="col-modal">
+    <h3>Add Column</h3>
+    <label class="m-lbl">Column Name</label>
+    <input type="text" class="m-inp" id="col-modal-name" placeholder="e.g. Salary Range, Referral, Priority"
+      onkeydown="if(event.key==='Enter') saveNewColumn()">
+    <label class="m-lbl">Type</label>
+    <div class="type-pills" id="col-type-pills">
+      <div class="type-pill selected" data-type="text">Text</div>
+      <div class="type-pill" data-type="dropdown">Dropdown</div>
+      <div class="type-pill" data-type="date">Date</div>
+    </div>
+    <div class="opts-field" id="col-opts-field">
+      <label class="m-lbl">Options <span style="font-weight:400;text-transform:none;letter-spacing:0">(comma-separated)</span></label>
+      <input type="text" class="m-inp" id="col-modal-opts" placeholder="e.g. Yes, No, Pending"
+        onkeydown="if(event.key==='Enter') saveNewColumn()">
+    </div>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn-primary" onclick="saveNewColumn()">Add Column</button>
+      <button class="btn-secondary" onclick="closeColModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast">✓ Copied to clipboard</div>
@@ -964,6 +1102,9 @@ function saveSetup() {
   persistSave();
   updateUI();
 
+  // Kick off context caching in the background — silently falls back if unavailable
+  cacheProfile();
+
   const successEl = document.getElementById('setup-success');
   successEl.style.display = 'block';
   setTimeout(() => successEl.style.display = 'none', 4000);
@@ -971,14 +1112,21 @@ function saveSetup() {
 
 function clearSetup() {
   if (!confirm('Clear all saved profile data?')) return;
+  // Delete remote cache if one exists
+  const cacheName = localStorage.getItem('jaa_cache_name');
+  if (cacheName && apiKey) deleteCache(cacheName, false);
   localStorage.removeItem('jaa_profile');
   localStorage.removeItem('jaa_resumes');
   localStorage.removeItem('jaa_api_key');
+  localStorage.removeItem('jaa_cache_name');
+  localStorage.removeItem('jaa_cache_hash');
+  localStorage.removeItem('jaa_cache_expire');
   userProfile = { name: '', title: '', background: '' };
   userResumes = [];
   apiKey = '';
   populateSetupForm();
   updateUI();
+  updateCacheStatus(null);
 }
 
 // ─── UPDATE GLOBAL UI STATE ──────────────────────────────────────────────────
@@ -1046,8 +1194,12 @@ async function handleBgUpload(input) {
     document.getElementById('setup-background').value = text;
     const zone = document.getElementById('bg-upload-zone');
     zone.classList.add('has-file');
-    document.getElementById('bg-upload-title').textContent = '✓ ' + file.name;
-    showToast('File loaded successfully');
+    zone.querySelector('.uz-icon').textContent = '✅';
+    zone.querySelector('.uz-title').textContent = 'File loaded — click to replace';
+    zone.querySelector('.uz-sub').textContent = file.name;
+    showFileChip(zone, file.name, text, () => {
+      document.getElementById('bg-file-input').click();
+    });
   }
 }
 
@@ -1062,11 +1214,35 @@ async function handleVariantUpload(input, index) {
       const zone = card.querySelector('.upload-zone');
       if (zone) {
         zone.classList.add('has-file');
-        zone.querySelector('.uz-title').textContent = '✓ ' + file.name;
+        zone.querySelector('.uz-icon').textContent = '✅';
+        zone.querySelector('.uz-title').textContent = 'File loaded — click to replace';
+        zone.querySelector('.uz-sub').textContent = file.name;
+        showFileChip(zone, file.name, text, () => input.click());
       }
     }
-    showToast('Resume loaded');
   }
+}
+
+// Insert a persistent green file chip directly below the upload zone
+function showFileChip(zoneEl, fileName, text, onReplace) {
+  // Remove any existing chip for this zone
+  const existing = zoneEl.nextElementSibling;
+  if (existing && existing.classList.contains('file-chip')) existing.remove();
+
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const chip = document.createElement('div');
+  chip.className = 'file-chip';
+  chip.innerHTML = `
+    <span class="chip-icon">📎</span>
+    <span class="chip-name">${escHtml(fileName)}</span>
+    <span class="chip-words">${wordCount.toLocaleString()} words</span>
+    <button class="chip-replace">Replace</button>
+  `;
+  chip.querySelector('.chip-replace').addEventListener('click', e => {
+    e.stopPropagation();
+    onReplace();
+  });
+  zoneEl.insertAdjacentElement('afterend', chip);
 }
 
 async function extractTextFromFile(file) {
@@ -1181,11 +1357,14 @@ function getSelected(rowId) {
 
 // ─── MODE SWITCHING ───────────────────────────────────────────────────────────
 function switchMode(mode) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + mode).classList.add('active');
-  document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+  const panel = document.getElementById('panel-' + mode);
+  if (panel) { panel.style.display = 'block'; panel.classList.add('active'); }
+  const btn = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+  if (btn) btn.classList.add('active');
   if (mode === 'setup') populateSetupForm();
+  if (mode === 'tracker') renderTracker();
   closeSidebar();
 }
 
@@ -1200,61 +1379,76 @@ ${userProfile.background || '[No background provided — ask the user to complet
 }
 
 // ─── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
-function getSystemPrompt(mode) {
+
+// Mode-specific rules only — used when profile is cached (not re-sent each call)
+function getModeInstructions(mode) {
   const name = userProfile.name || 'the user';
-  const profile = buildProfileContext();
-  const base = `You are a highly skilled job application strategist working exclusively for ${name}. You have deep knowledge of their full professional profile:\n\n${profile}\n\n`;
+  const note = `You are a highly skilled job application strategist for ${name}. Their full professional profile is already provided as context in this conversation. Draw from it exclusively — never fabricate.\n\n`;
 
-  const prompts = {
-    tailor: base + `Your job: Given a resume version (or general background) and a job description, rewrite the person's experience as tight, ATS-friendly bullet points that directly address what the employer wants.
+  const rules = {
+    tailor: note + `Your job: Rewrite this person's experience as complete, ATS-ready bullet points that match the job description.
+
 Rules:
-- PRIORITISE the specific resume version if provided — use its framing as the foundation
-- Only draw from the broader background profile if the resume is missing something directly relevant to the JD
-- Never fabricate — only reframe real experience
-- Use strong action verbs and quantify wherever possible
-- Group bullets by role/period
-- Lead with the most relevant bullets for the target role
-- Include 3–6 bullets per role, fewer for earlier roles
-- Output ONLY the bullet points, formatted cleanly. No preamble.`,
+- FINISH THE DOCUMENT. Cover every relevant role. Do not truncate or trail off mid-list.
+- Never fabricate. Reframe real experience only — stronger verbs, clearer impact, JD-aligned framing.
+- Be selective: drop bullets genuinely irrelevant to this role. Don't pad with filler.
+- Lead each bullet with impact or outcome, not task description.
+- Quantify wherever the background provides real numbers — don't invent them.
+- If a role has limited relevance, give it 1–2 tight bullets rather than skipping it.
+- Group by role, most recent first.
+- Output ONLY the bullet points. No preamble, no headers like "Here are your bullets", no sign-off.`,
 
-    cover: base + `Your job: Write a personalised, compelling cover letter for ${name}.
+    cover: note + `Your job: Write a complete, personalised cover letter for ${name}.
 Rules:
-- Open with a hook specific to the company/role — NOT "I am excited to apply"
-- Connect their specific background to what the company needs
-- Don't list every achievement — pick the 2–3 most relevant
-- Sound like a real person, not a template
-- Close with a specific, confident call to action
-- Output ONLY the letter body (no date, address block). Start with the salutation.`,
+- Open with a specific hook about the company or role — not "I am excited to apply" or "I am writing to express my interest"
+- Pick 2–3 experiences that directly answer what the JD is asking for. Don't list everything.
+- Sound like a real person. Avoid corporate filler phrases.
+- Close with a clear, direct call to action.
+- Write the FULL letter — do not stop mid-paragraph. Every paragraph must be complete.
+- Output ONLY the letter body. Start with the salutation. No date, no address block.`,
 
-    outreach: base + `Your job: Write a tight, non-generic outreach message for ${name}.
+    outreach: note + `Your job: Write a complete, tight outreach message for ${name}.
 Rules:
-- Start with something specific about the recipient, not "I came across your profile"
-- Be direct about the ask but don't be pushy
-- Show relevant value in 1–2 sentences — don't paste a resume
-- For LinkedIn DMs: keep under 300 characters, punchy
-- For emails: subject line first, then body
-- Sound human, confident, specific
-- Output ONLY the message (include subject line if email). No preamble.`,
+- Open with something specific about the recipient — not "I came across your profile"
+- Make the ask clear and direct without being pushy
+- Show relevant value in 1–2 sentences. No life story.
+- LinkedIn DM: aim for 250–280 characters — punchy and complete
+- Email: include a subject line, then a complete message body
+- Finish the message fully. Do not cut off mid-sentence.
+- Output ONLY the message. No preamble.`,
 
-    gap: base + `Your job: Provide an honest gap analysis of ${name}'s fit for the described role.
-Format:
-1. OVERALL FIT: X/10 with 1-sentence summary
-2. STRONG MATCHES: 4–6 bullet points where their background directly maps to requirements
-3. PARTIAL MATCHES: 2–3 areas where they have adjacent but not exact experience
-4. GAPS / RISKS: 2–4 honest gaps — don't sugarcoat
-5. RECOMMENDED FRAMING: How they should position themselves for this role (2–3 specific tactics)
-Be direct and useful. They want honest assessment, not false confidence.`,
+    gap: note + `Your job: Give a direct, honest assessment of this person's fit for the role.
 
-    interview: base + `Your job: Generate interview Q&As tailored to the role and round type.
+Format exactly as follows:
+1. FIT SCORE: X/10 — one blunt sentence on why. Don't hedge.
+2. GENUINE STRENGTHS: Where their experience directly maps to what's required. Be specific, not cheerful.
+3. REAL GAPS: The actual shortfalls. If they've never done something the role requires, say so plainly. If it's a stretch, call it a stretch. Don't soften gaps with "however" or "while you may not have X, you do have Y."
+4. HONEST TAKE: Is this worth applying to? If yes — what must they lead with, what must they hide or reframe. If it's a reach — what would actually close the gap.
+
+Hard rules:
+- Do not use sandwich feedback. Gaps are gaps.
+- Do not invent positives to offset negatives.
+- If the fit is weak, say the fit is weak and explain why precisely.
+- Be the mentor who tells them the truth, not the recruiter who wants them to feel good.`,
+
+    interview: note + `Your job: Generate interview Q&As tailored to the role and round type.
 For each question:
-- State the likely question
-- Give ${name} a strong, specific answer using their real experience (STAR format for behavioral)
-- Keep answers tight — 3–5 sentences max per answer
-- Pull from real projects and achievements from their profile
-Format clearly as Q1, Q2, etc. Output ONLY the Q&As. No preamble.`
+- State the likely question clearly
+- Give ${name} a strong, specific answer drawing from their real experience (STAR format for behavioral)
+- Keep answers tight — 3–5 sentences. Complete every answer fully.
+- Use real examples from their profile — don't use placeholders like "[mention project X]"
+Format clearly as Q1, Q2, etc. Complete all requested questions. Output ONLY the Q&As. No preamble.`
   };
 
-  return prompts[mode] || base;
+  return rules[mode] || note;
+}
+
+// Full system prompt — used as fallback when profile is NOT cached
+function getSystemPrompt(mode) {
+  const name    = userProfile.name || 'the user';
+  const profile = buildProfileContext();
+  const base    = `You are a highly skilled job application strategist working exclusively for ${name}. You have deep knowledge of their full professional profile:\n\n${profile}\n\n`;
+  return base + (getModeInstructions(mode).split('\n\n').slice(1).join('\n\n'));
 }
 
 // ─── BUILD USER MESSAGE ───────────────────────────────────────────────────────
@@ -1362,33 +1556,53 @@ function quickRefine(mode, btn) {
   refine(mode);
 }
 
-// ─── API CALL (Gemini) ────────────────────────────────────────────────────────
-async function callAPI(mode, messages) {
+// ─── API CALL (Gemini, cache-aware) ──────────────────────────────────────────
+async function callAPI(mode, messages, skipCache = false) {
+  const cacheName = skipCache ? null : await getValidCache();
+
+  // Mode-specific token budgets — tailor/interview need more room to complete full output
+  const maxTokens = { tailor: 3000, cover: 2000, outreach: 1000, gap: 2000, interview: 3500 }[mode] || 2000;
+
+  const contents = messages.map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
+  }));
+
+  const body = cacheName
+    ? {
+        // Profile is cached — only send the short mode-specific instructions
+        cachedContent: cacheName,
+        system_instruction: { parts: [{ text: getModeInstructions(mode) }] },
+        contents,
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
+      }
+    : {
+        // Fallback — full profile embedded in system prompt every call
+        system_instruction: { parts: [{ text: getSystemPrompt(mode) }] },
+        contents,
+        generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
+      };
+
   try {
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey
-        },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: getSystemPrompt(mode) }]
-          },
-          contents: messages.map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-          })),
-          generationConfig: {
-            maxOutputTokens: 1500,
-            temperature: 0.7
-          }
-        })
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify(body)
       }
     );
     const data = await response.json();
+
+    // Cache expired or was deleted remotely — clear it and retry once without cache
+    if (data.error?.code === 404 && cacheName) {
+      localStorage.removeItem('jaa_cache_name');
+      localStorage.removeItem('jaa_cache_hash');
+      localStorage.removeItem('jaa_cache_expire');
+      updateCacheStatus(null);
+      return callAPI(mode, messages, true);
+    }
+
     if (data.error) return `Error: ${data.error.message}`;
     return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
   } catch (err) {
@@ -1517,16 +1731,18 @@ async function fetchJD(urlInputId, textareaId, statusId) {
   const btnText    = document.getElementById(urlInputId.replace('-url', '-btn-text'));
   const btn        = urlInput.closest('.field').querySelector('.jd-fetch-btn');
 
-  const url = urlInput.value.trim();
-  if (!url) { urlInput.focus(); return; }
+  const rawUrl = urlInput.value.trim();
+  if (!rawUrl) { urlInput.focus(); return; }
 
-  // Validate it looks like a URL
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+  if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
     showFetchStatus(statusEl, 'error', '⚠ Please enter a full URL starting with https://');
     return;
   }
 
-  // Loading state
+  // Normalize the URL before doing anything (e.g. LinkedIn collections → view)
+  const url = normalizeJobUrl(rawUrl);
+  if (url !== rawUrl) urlInput.value = url; // update field to show cleaned URL
+
   btn.disabled = true;
   if (btnSpinner) btnSpinner.style.display = 'block';
   if (btnText) btnText.textContent = 'Fetching…';
@@ -1538,6 +1754,36 @@ async function fetchJD(urlInputId, textareaId, statusId) {
     textarea.value = text;
     textarea.dispatchEvent(new Event('input'));
     urlInput.classList.add('success');
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const domain    = getDomain(url);
+    const msg = warning
+      ? `⚠ ${warning}`
+      : `✓ Fetched ~${wordCount} words from ${domain}. Review below and trim if needed.`;
+    showFetchStatus(statusEl, warning ? 'error' : 'success', msg);
+    if (!warning) textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (err) {
+    urlInput.classList.add('error');
+    showFetchStatus(statusEl, 'error', `⚠ ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    if (btnSpinner) btnSpinner.style.display = 'none';
+    if (btnText) btnText.textContent = 'Fetch ↓';
+  }
+}
+
+// Normalize job board URLs before fetching
+// e.g. LinkedIn "collections" pages → direct job view URL
+function normalizeJobUrl(url) {
+  try {
+    const u = new URL(url);
+    // LinkedIn: /jobs/collections/...?currentJobId=1234 → /jobs/view/1234/
+    if (u.hostname.includes('linkedin.com')) {
+      const jobId = u.searchParams.get('currentJobId');
+      if (jobId) return `https://www.linkedin.com/jobs/view/${jobId}/`;
+    }
+  } catch(e) {}
+  return url;
+}
     const wordCount = text.split(/\s+/).filter(Boolean).length;
     const domain    = getDomain(url);
     const msg = warning
@@ -1564,17 +1810,18 @@ function showFetchStatus(el, type, msg) {
 async function fetchJobDescription(url) {
   const domain = getDomain(url).toLowerCase();
 
-  // LinkedIn jobs need a login — give a helpful specific message
   if (domain.includes('linkedin.com')) {
-    // Try anyway but warn the user that it often requires login
+    // LinkedIn /jobs/view/{id}/ pages embed job data in JSON-LD — try that first
     try {
-      const result = await tryFetch(url);
-      const text = extractJDText(result, url);
+      const html = await tryFetch(url);
+      const text = extractJDText(html, url);
       if (text.length > 300) return { text };
     } catch(e) {}
+    // Fell through — page likely requires login or returned minimal HTML
     throw new Error(
-      'LinkedIn job pages usually require you to be logged in. ' +
-      'Open the listing, click "Show more" on the description, then copy and paste the text below.'
+      'LinkedIn requires you to be signed in to view this job. ' +
+      'Open the listing in your browser, expand the full description, ' +
+      'then copy and paste the text into the box below.'
     );
   }
 
@@ -1583,17 +1830,16 @@ async function fetchJobDescription(url) {
 
   if (text.length < 150) {
     throw new Error(
-      'Not enough content found on this page — it may require a login or use JavaScript rendering. ' +
+      'Not enough content found — this page may require a login or uses JavaScript rendering. ' +
       'Try copy-pasting the job description directly below.'
     );
   }
 
-  // Warn if content seems too long (caught entire page)
   const wordCount = text.split(/\s+/).length;
   if (wordCount > 2000) {
     return {
       text,
-      warning: `Got ${wordCount} words — may include extra page content. Scroll down to trim the text to just the job description.`
+      warning: `Got ${wordCount} words — may include extra page content. Trim the text below to just the job description.`
     };
   }
 
@@ -1633,7 +1879,25 @@ function extractJDText(html, url) {
   const parser = new DOMParser();
   const doc    = parser.parseFromString(html, 'text/html');
 
-  // Strip noise
+  // ── Strategy 1: JSON-LD structured data
+  // Works on LinkedIn, Greenhouse, Lever and most modern boards even without JS
+  const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+  for (const script of jsonLdScripts) {
+    try {
+      const data = JSON.parse(script.textContent);
+      const items = Array.isArray(data) ? data : [data];
+      for (const item of items) {
+        if (item['@type'] === 'JobPosting' && item.description) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = item.description;
+          const text = cleanJDText(tmp.textContent);
+          if (text.length > 200) return text;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // ── Strategy 2: CSS selectors (site-specific, then generic)
   ['script','style','nav','header','footer','aside','noscript','iframe',
    '[role="banner"]','[role="navigation"]','[role="complementary"]',
    '.cookie-banner','.site-header','.site-footer'].forEach(sel => {
@@ -1642,7 +1906,6 @@ function extractJDText(html, url) {
 
   const domain = getDomain(url).toLowerCase();
 
-  // Site-specific selectors (ordered most → least specific)
   const siteMap = {
     'linkedin.com':     ['.description__text','.show-more-less-html__markup','[class*="description"]'],
     'indeed.com':       ['#jobDescriptionText','.jobsearch-jobDescriptionText','[class*="job-description"]'],
@@ -1664,7 +1927,6 @@ function extractJDText(html, url) {
     'article', 'main',
   ];
 
-  // Pick selectors for this domain
   const domainSelectors = Object.entries(siteMap).find(([d]) => domain.includes(d))?.[1] || [];
   const selectors = [...domainSelectors, ...genericSelectors];
 
@@ -1678,7 +1940,7 @@ function extractJDText(html, url) {
     } catch(e) {}
   }
 
-  // Last resort: full body
+  // ── Strategy 3: full body as last resort
   return cleanJDText(doc.body?.textContent || '');
 }
 
@@ -1695,6 +1957,417 @@ function cleanJDText(text) {
 function getDomain(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); }
   catch { return url; }
+}
+
+// ─── CONTEXT CACHING ─────────────────────────────────────────────────────────
+// Profile is uploaded once to Gemini's cache endpoint. Every tool call then
+// passes only the cache ID + short mode instructions instead of the full
+// background text. Falls back silently to full-prompt if caching is unavailable.
+
+function hashProfile() {
+  const str = (userProfile.name || '') + (userProfile.title || '') +
+              (userProfile.background || '') +
+              userResumes.map(r => r.label + r.content).join('');
+  let h = 0;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(31, h) + str.charCodeAt(i) | 0; }
+  return String(h);
+}
+
+async function cacheProfile() {
+  if (!apiKey || !userProfile.background) return null;
+
+  const profileText = buildProfileContext();
+
+  // Gemini requires ≥ ~1,024 tokens. ~4 chars/token → need ~4,000 chars minimum.
+  if (profileText.length < 4000) {
+    updateCacheStatus('short');
+    return null;
+  }
+
+  // Reuse existing cache if profile unchanged and not expiring soon
+  const existingName = localStorage.getItem('jaa_cache_name');
+  const existingHash = localStorage.getItem('jaa_cache_hash');
+  const expireStr    = localStorage.getItem('jaa_cache_expire');
+  const notExpired   = expireStr && new Date(expireStr).getTime() > Date.now() + 5 * 60 * 1000;
+
+  if (existingName && existingHash === hashProfile() && notExpired) {
+    updateCacheStatus('cached');
+    return existingName;
+  }
+
+  // Invalidate stale cache before creating a new one
+  if (existingName) await deleteCache(existingName, false);
+
+  updateCacheStatus('creating');
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/cachedContents',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+          model: 'models/gemini-2.5-flash',
+          // Stored as a conversation turn so system_instruction remains free
+          // for mode-specific rules on each generate call
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: `Here is my complete professional background and experience. Refer to this for all outputs:\n\n${profileText}` }]
+            },
+            {
+              role: 'model',
+              parts: [{ text: `Understood. I have your full professional profile. I will use it as the foundation for every output — drawing from and reframing your real experience only, never fabricating.` }]
+            }
+          ],
+          ttl: '3600s'
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.name) {
+      localStorage.setItem('jaa_cache_name',   data.name);
+      localStorage.setItem('jaa_cache_hash',   hashProfile());
+      localStorage.setItem('jaa_cache_expire', data.expireTime);
+      updateCacheStatus('cached');
+      return data.name;
+    }
+
+    updateCacheStatus('unavailable');
+    return null;
+
+  } catch(e) {
+    updateCacheStatus('unavailable');
+    return null;
+  }
+}
+
+async function deleteCache(cacheName, updateStorage = true) {
+  try {
+    await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${cacheName}`,
+      { method: 'DELETE', headers: { 'x-goog-api-key': apiKey } }
+    );
+  } catch(e) {}
+  if (updateStorage) {
+    localStorage.removeItem('jaa_cache_name');
+    localStorage.removeItem('jaa_cache_hash');
+    localStorage.removeItem('jaa_cache_expire');
+  }
+}
+
+async function getValidCache() {
+  const cacheName = localStorage.getItem('jaa_cache_name');
+
+  // No cache yet — attempt lazy creation on first generate click
+  if (!cacheName) return cacheProfile();
+
+  // Profile changed since cache was built — invalidate and rebuild
+  if (localStorage.getItem('jaa_cache_hash') !== hashProfile()) {
+    await deleteCache(cacheName);
+    return cacheProfile();
+  }
+
+  // Cache expiring within 5 minutes — refresh proactively
+  const expireStr = localStorage.getItem('jaa_cache_expire');
+  if (expireStr && new Date(expireStr).getTime() < Date.now() + 5 * 60 * 1000) {
+    localStorage.removeItem('jaa_cache_name');
+    return cacheProfile();
+  }
+
+  return cacheName;
+}
+
+function updateCacheStatus(status) {
+  const el = document.getElementById('cache-status');
+  if (!el) return;
+  const states = {
+    creating:    { cls: 'cache-creating', text: '⟳ Caching your profile with Gemini…' },
+    cached:      { cls: 'cache-ok',       text: '✓ Profile cached — tool calls will use far fewer tokens' },
+    short:       { cls: 'cache-warn',     text: '◌ Profile too short to cache (needs ~4,000 characters). Full prompt sent each call.' },
+    unavailable: { cls: 'cache-warn',     text: '◌ Caching unavailable on this tier — full prompt used each call. Everything still works.' },
+  };
+  if (!status || !states[status]) {
+    el.textContent = '';
+    el.className = 'cache-status';
+    return;
+  }
+  const s = states[status];
+  el.textContent = s.text;
+  el.className   = `cache-status visible ${s.cls}`;
+}
+
+// ─── JOB TRACKER ─────────────────────────────────────────────────────────────
+
+const STAGES = ['Wishlist','Applied','Phone Screen','Interview','Offer','Rejected','Withdrawn'];
+
+const STAGE_STYLE = {
+  'Wishlist':     { bg: '#f3f4f6', color: '#6b7280' },
+  'Applied':      { bg: '#eff6ff', color: '#2563eb' },
+  'Phone Screen': { bg: '#fffbeb', color: '#d97706' },
+  'Interview':    { bg: '#f5f3ff', color: '#7c3aed' },
+  'Offer':        { bg: '#ecfdf5', color: '#059669' },
+  'Rejected':     { bg: '#fef2f2', color: '#dc2626' },
+  'Withdrawn':    { bg: '#f9fafb', color: '#9ca3af' },
+};
+
+let trackerData = { columns: [], jobs: [] };
+
+function loadTracker() {
+  try {
+    const s = localStorage.getItem('jaa_tracker');
+    if (s) trackerData = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveTracker() {
+  localStorage.setItem('jaa_tracker', JSON.stringify(trackerData));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function renderTrackerStats() {
+  const el = document.getElementById('tracker-stats');
+  if (!el) return;
+  const j = trackerData.jobs;
+  const total      = j.length;
+  const active     = j.filter(x => !['Rejected','Withdrawn','Offer'].includes(x.stage)).length;
+  const interviews = j.filter(x => x.stage === 'Interview').length;
+  const offers     = j.filter(x => x.stage === 'Offer').length;
+  const rejected   = j.filter(x => x.stage === 'Rejected').length;
+  el.innerHTML = [
+    ['Total',       total,      ''],
+    ['Active',      active,     ''],
+    ['Interviews',  interviews, 's-interview'],
+    ['Offers',      offers,     's-offer'],
+    ['Rejected',    rejected,   's-rejected'],
+  ].map(([lbl, num, cls]) =>
+    `<div class="tracker-stat ${cls}">
+       <span class="stat-num">${num}</span>
+       <span class="stat-lbl">${lbl}</span>
+     </div>`
+  ).join('');
+}
+
+// ── Full render ───────────────────────────────────────────────────────────────
+function renderTracker() {
+  renderTrackerStats();
+  renderTrackerHead();
+  renderTrackerBody();
+}
+
+function renderTrackerHead() {
+  const thead = document.getElementById('tracker-thead');
+  if (!thead) return;
+  let html = `<tr>
+    <th style="min-width:150px">Company</th>
+    <th style="min-width:160px">Role</th>
+    <th style="min-width:136px">Date Applied</th>
+    <th style="min-width:136px">Stage</th>
+    <th style="min-width:180px">Notes</th>`;
+  trackerData.columns.forEach(col => {
+    html += `<th class="th-custom">
+      ${escHtml(col.name)}
+      <button class="col-del-btn" onclick="deleteColumn('${col.id}')" title="Remove column">×</button>
+    </th>`;
+  });
+  html += `<th style="min-width:90px; padding-left:8px;">
+    <button class="btn-add-col" onclick="openColModal()">+ Column</button>
+  </th>`;
+  html += `<th style="width:36px;"></th></tr>`;
+  thead.innerHTML = html;
+}
+
+function renderTrackerBody() {
+  const tbody = document.getElementById('tracker-tbody');
+  if (!tbody) return;
+  if (!trackerData.jobs.length) {
+    const span = 6 + trackerData.columns.length;
+    tbody.innerHTML = `<tr><td colspan="${span}">
+      <div class="tracker-empty">
+        <div class="empty-icon">📋</div>
+        No applications yet.<br>Click <strong>＋ Add application</strong> below to get started.
+      </div>
+    </td></tr>`;
+    return;
+  }
+  tbody.innerHTML = trackerData.jobs.map(job => {
+    const ss   = STAGE_STYLE[job.stage] || STAGE_STYLE['Applied'];
+    const opts = STAGES.map(s =>
+      `<option value="${s}"${job.stage===s?' selected':''}>${s}</option>`
+    ).join('');
+
+    const customCells = trackerData.columns.map(col => {
+      const val = escHtml(job[col.id] || '');
+      if (col.type === 'dropdown') {
+        const dopts = ['', ...col.options].map(o =>
+          `<option value="${escHtml(o)}"${(job[col.id]||'')=== o?' selected':''}>${escHtml(o)}</option>`
+        ).join('');
+        return `<td><select class="t-sel" data-id="${job.id}" data-field="${col.id}" onchange="updateJobField(this)">${dopts}</select></td>`;
+      }
+      if (col.type === 'date') {
+        return `<td><input type="date" class="t-inp" data-id="${job.id}" data-field="${col.id}" value="${val}" oninput="updateJobField(this)"></td>`;
+      }
+      return `<td><input type="text" class="t-inp" data-id="${job.id}" data-field="${col.id}" value="${val}" placeholder="—" oninput="updateJobField(this)"></td>`;
+    }).join('');
+
+    return `<tr data-job-id="${job.id}">
+      <td><input type="text" class="t-inp" data-id="${job.id}" data-field="company" value="${escHtml(job.company||'')}" placeholder="Company" oninput="updateJobField(this)"></td>
+      <td><input type="text" class="t-inp" data-id="${job.id}" data-field="role" value="${escHtml(job.role||'')}" placeholder="Role title" oninput="updateJobField(this)"></td>
+      <td><input type="date" class="t-inp" data-id="${job.id}" data-field="dateApplied" value="${escHtml(job.dateApplied||'')}" oninput="updateJobField(this)"></td>
+      <td>
+        <select class="stage-sel" data-id="${job.id}" data-field="stage"
+          style="background:${ss.bg};color:${ss.color};"
+          onchange="updateStage(this)">
+          ${opts}
+        </select>
+      </td>
+      <td><input type="text" class="t-inp" data-id="${job.id}" data-field="notes" value="${escHtml(job.notes||'')}" placeholder="Notes…" oninput="updateJobField(this)"></td>
+      ${customCells}
+      <td></td>
+      <td><button class="row-del" onclick="deleteJob('${job.id}')" title="Remove row">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────────────────
+function addJob() {
+  const job = {
+    id: genId(), company: '', role: '',
+    dateApplied: new Date().toISOString().slice(0,10),
+    stage: 'Applied', notes: ''
+  };
+  trackerData.columns.forEach(col => { job[col.id] = ''; });
+  trackerData.jobs.push(job);
+  saveTracker();
+  renderTracker();
+  // Focus first input in new row
+  const rows = document.querySelectorAll('#tracker-tbody tr[data-job-id]');
+  rows[rows.length - 1]?.querySelector('.t-inp')?.focus();
+}
+
+function deleteJob(id) {
+  if (!confirm('Remove this application?')) return;
+  trackerData.jobs = trackerData.jobs.filter(j => j.id !== id);
+  saveTracker();
+  renderTracker();
+}
+
+function updateJobField(input) {
+  const job = trackerData.jobs.find(j => j.id === input.dataset.id);
+  if (job) { job[input.dataset.field] = input.value; saveTracker(); renderTrackerStats(); }
+}
+
+function updateStage(sel) {
+  const job = trackerData.jobs.find(j => j.id === sel.dataset.id);
+  if (job) {
+    job.stage = sel.value;
+    const ss = STAGE_STYLE[sel.value] || STAGE_STYLE['Applied'];
+    sel.style.background = ss.bg;
+    sel.style.color      = ss.color;
+    saveTracker();
+    renderTrackerStats();
+  }
+}
+
+// ── Custom columns ────────────────────────────────────────────────────────────
+let _colModalType = 'text';
+
+function openColModal() {
+  _colModalType = 'text';
+  document.getElementById('col-modal-name').value = '';
+  document.getElementById('col-modal-opts').value = '';
+  document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+  document.querySelector('.type-pill[data-type="text"]').classList.add('selected');
+  document.getElementById('col-opts-field').classList.remove('visible');
+  document.getElementById('col-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('col-modal-name').focus(), 60);
+}
+
+function closeColModal() {
+  document.getElementById('col-modal-overlay').classList.remove('open');
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target === e.currentTarget) closeColModal();
+}
+
+document.querySelectorAll('.type-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
+    _colModalType = pill.dataset.type;
+    document.getElementById('col-opts-field').classList.toggle('visible', _colModalType === 'dropdown');
+  });
+});
+
+function saveNewColumn() {
+  const name = document.getElementById('col-modal-name').value.trim();
+  if (!name) { document.getElementById('col-modal-name').focus(); return; }
+  const col = { id: genId(), name, type: _colModalType, options: [] };
+  if (_colModalType === 'dropdown') {
+    col.options = document.getElementById('col-modal-opts').value
+      .split(',').map(s => s.trim()).filter(Boolean);
+    if (!col.options.length) col.options = ['Option A','Option B'];
+  }
+  trackerData.columns.push(col);
+  // Add default empty value to existing jobs
+  trackerData.jobs.forEach(j => { j[col.id] = ''; });
+  saveTracker();
+  closeColModal();
+  renderTracker();
+}
+
+function deleteColumn(id) {
+  if (!confirm('Remove this column and all its data?')) return;
+  trackerData.columns = trackerData.columns.filter(c => c.id !== id);
+  trackerData.jobs.forEach(j => delete j[id]);
+  saveTracker();
+  renderTracker();
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+function exportTracker() {
+  if (!trackerData.jobs.length) { showToast('No applications to export yet'); return; }
+  const payload = { version: 1, exportedAt: new Date().toISOString(), ...trackerData };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url, download: `job-tracker-${new Date().toISOString().slice(0,10)}.json`
+  });
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${trackerData.jobs.length} application${trackerData.jobs.length!==1?'s':''}`);
+}
+
+function importTracker(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.jobs || !Array.isArray(data.jobs)) throw new Error('Invalid');
+      const existing = trackerData.jobs.length;
+      const msg = existing
+        ? `Replace your ${existing} existing application${existing!==1?'s':''} with ${data.jobs.length} from this file?`
+        : `Import ${data.jobs.length} application${data.jobs.length!==1?'s':''} from this file?`;
+      if (!confirm(msg)) return;
+      trackerData = { columns: data.columns || [], jobs: data.jobs };
+      saveTracker();
+      renderTracker();
+      showToast(`Imported ${data.jobs.length} application${data.jobs.length!==1?'s':''}`);
+    } catch(e) {
+      showToast('⚠ Invalid file — use a tracker export JSON');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
 }
 
 // ─── SIDEBAR TOGGLE ───────────────────────────────────────────────────────────
@@ -1720,6 +2393,7 @@ function closeSidebar() {
 
 
 loadSaved();
+loadTracker();
 updateUI();
 
 // If no profile, start on setup; otherwise start on home
