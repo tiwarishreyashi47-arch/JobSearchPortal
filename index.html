@@ -162,6 +162,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 .version-badge.latest { border-color: var(--gold); color: #7a4e10; background: var(--gold-light); }
 .history-body { padding: 16px 22px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: var(--ink); }
 .history-body.stale { color: #b0a898; }
+.generation-error { margin: 16px 22px; padding: 12px 14px; border: 1px solid #e0a0a0; border-radius: 7px; background: var(--red-light); color: #7a2020; font-size: 13px; line-height: 1.55; }
 .feedback-bubble { margin: 0; padding: 8px 22px; border-bottom: 1px solid var(--border); background: #fffdf5; display: flex; align-items: flex-start; gap: 10px; }
 .fb-you { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gold); white-space: nowrap; padding-top: 2px; min-width: 28px; }
 .fb-text { font-size: 13px; color: var(--muted); line-height: 1.6; font-style: italic; }
@@ -1788,7 +1789,9 @@ async function generate(mode) {
 
   const text = await callAPI(mode, histories[mode]);
   if (cancelledGenerations[mode]) { setLoading(mode, false); return; }
-  if (text) {
+  if (isAPIError(text)) {
+    renderGenerationError(mode, text);
+  } else if (text) {
     histories[mode].push({ role: 'assistant', content: text });
     addIteration(mode, text, 1, true);
   }
@@ -1812,7 +1815,9 @@ async function refine(mode) {
 
   setRefining(mode, true);
   const text = await callAPI(mode, histories[mode]);
-  if (text) {
+  if (isAPIError(text)) {
+    renderGenerationError(mode, text);
+  } else if (text) {
     histories[mode].push({ role: 'assistant', content: text });
     const ver = histories[mode].filter(m => m.role === 'assistant').length;
     addIteration(mode, text, ver, true);
@@ -1938,6 +1943,17 @@ function addIteration(mode, text, ver, isCurrent) {
     else { clearInterval(iv); }
   }, 5);
   div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function isAPIError(text) {
+  return typeof text === 'string' && text.startsWith('Error:');
+}
+
+function renderGenerationError(mode, text) {
+  const container = document.getElementById(mode + '-iterations');
+  if (!container) return;
+  container.innerHTML = `<div class="generation-error"><strong>Could not generate this yet.</strong><br>${escHtml(text.replace(/^Error:\s*/, ''))}<br><span style="display:inline-block;margin-top:6px;color:#8d4a4a">Check your setup, then try again.</span></div>`;
+  showToast('Generation failed — see the message below');
 }
 
 function addFeedbackBubble(mode, text) {
