@@ -1,4 +1,5 @@
 const MODEL = 'gemini-2.5-flash';
+const MAX_REQUEST_BYTES = 120000;
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,6 +14,13 @@ module.exports = async function handler(req, res) {
     const { systemInstruction, messages, generationConfig } = req.body || {};
     if (!systemInstruction || !Array.isArray(messages) || !messages.length) {
       return res.status(400).json({ error: 'Missing generation input.' });
+    }
+
+    const requestBytes = Buffer.byteLength(JSON.stringify(req.body), 'utf8');
+    if (requestBytes > MAX_REQUEST_BYTES) {
+      return res.status(413).json({
+        error: 'This request is too large. Shorten the job description or profile context and try again.'
+      });
     }
 
     const response = await fetch(
