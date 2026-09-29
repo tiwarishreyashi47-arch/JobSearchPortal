@@ -10,6 +10,12 @@ A role-aware job application assistant that helps candidates tailor applications
 - Download generated outputs as `.docx` files.
 - Keep profile data in the browser and use a secure Vercel endpoint for deployed AI requests.
 
+## Phase 2 foundation
+
+The first Phase 2 slice is authenticated cloud persistence. The Supabase schema and data contract are in [`supabase/`](./supabase/). It is intentionally additive: until a Supabase project is connected and the auth flow is enabled, the deployed prototype continues to use its Phase 1 browser storage.
+
+The planned migration is user-scoped storage for profiles, target role profiles, resume variants, and job applications. Automatic job discovery, recommendation history, and collaboration remain later Phase 2 slices.
+
 ## Local development
 
 Open `index.html` with a local static server. For local-only use, a Gemini API key can be entered in My Profile. In a deployed Vercel project, set `GEMINI_API_KEY` in the project environment variables; the `/api/generate` function will use it without exposing the key to the browser.
