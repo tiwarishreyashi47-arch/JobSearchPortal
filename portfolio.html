@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="JobSearch Portal — a role-aware application toolkit for tailoring resumes, cover letters, and interview preparation.">
+  <title>JobSearch Portal — Product Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#201d1b;--paper:#f8f4ec;--surface:#fffdf8;--soft:#eee8f7;--lilac:#d9ccf4;--peach:#f5c9ad;--yellow:#f4dc78;--mint:#c9e7d0;--muted:#716b64;--rule:#201d1b}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"Space Grotesk",sans-serif;line-height:1.5}a{color:inherit}button{font:inherit;color:inherit}
+    .wrap{width:min(1180px,calc(100% - 40px));margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1.5px solid var(--rule);position:sticky;top:0;background:rgba(248,244,236,.94);backdrop-filter:blur(12px);z-index:5}.brand{font-weight:800;letter-spacing:-.04em;font-size:18px}.brand span{display:inline-block;background:var(--ink);color:var(--paper);padding:3px 8px;border-radius:6px;margin-right:7px}.nav{display:flex;gap:24px;font-weight:600;font-size:14px}.nav a{text-decoration:none}.nav a:hover{text-decoration:underline;text-underline-offset:5px}.cta{background:var(--ink);color:var(--paper);padding:10px 15px;border-radius:999px;text-decoration:none}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;padding:92px 0 76px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:18px}.hero h1{font-family:Archivo,sans-serif;font-size:clamp(48px,7vw,88px);line-height:.98;letter-spacing:-.075em;margin:0 0 24px;max-width:720px}.hero h1 em{font-style:normal;text-decoration:underline;text-decoration-color:var(--peach);text-decoration-thickness:13px;text-underline-offset:2px}.hero p{font-size:20px;max-width:600px;color:var(--muted);margin:0 0 30px}.actions{display:flex;gap:12px;flex-wrap:wrap}.button{display:inline-flex;align-items:center;gap:8px;padding:13px 19px;border:1.5px solid var(--ink);border-radius:999px;text-decoration:none;font-weight:700;background:var(--ink);color:var(--paper);box-shadow:4px 4px 0 var(--ink);transition:.15s}.button:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}.button.secondary{background:var(--surface);color:var(--ink)}
+    .hero-art{position:relative;min-height:390px}.art-card{position:absolute;border:1.5px solid var(--ink);border-radius:20px;box-shadow:7px 7px 0 var(--ink);padding:22px;background:var(--surface)}.art-card.one{width:78%;right:4%;top:18px;transform:rotate(4deg);background:var(--lilac)}.art-card.two{width:80%;left:2%;top:105px;transform:rotate(-4deg);background:var(--surface)}.art-card.three{width:68%;right:14%;top:235px;transform:rotate(3deg);background:var(--peach)}.mini-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}.mini-title{font-family:Archivo,sans-serif;font-size:25px;line-height:1.05;margin:10px 0}.mini-line{height:8px;background:var(--ink);opacity:.18;border-radius:99px;margin:8px 0;width:78%}.mini-line.short{width:48%}.mini-pill{display:inline-block;border:1px solid var(--ink);border-radius:99px;padding:4px 9px;font-size:11px;font-weight:700;margin:4px 3px 0 0}
+    .band{border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);padding:17px 0;overflow:hidden;white-space:nowrap}.ticker{display:flex;gap:34px;width:max-content;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:12px;animation:move 22s linear infinite}.ticker span:nth-child(odd){color:var(--muted)}@keyframes move{to{transform:translateX(-50%)}}
+    section{padding:82px 0}.section-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:30px}.section-head h2{font-family:Archivo,sans-serif;letter-spacing:-.05em;font-size:clamp(34px,5vw,58px);line-height:1;margin:0}.section-head p{max-width:430px;color:var(--muted);margin:0}.story{display:grid;grid-template-columns:1fr 1fr;gap:18px}.story-card{border:1.5px solid var(--ink);border-radius:18px;padding:28px;background:var(--surface);box-shadow:5px 5px 0 var(--ink)}.story-card:nth-child(2){background:var(--yellow)}.story-card h3{font-family:Archivo,sans-serif;font-size:28px;margin:0 0 12px;letter-spacing:-.04em}.story-card p{color:#514b45;margin:0}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.step{min-height:200px;border:1.5px solid var(--ink);border-radius:17px;padding:20px;background:var(--surface);box-shadow:4px 4px 0 var(--ink)}.step:nth-child(2){background:var(--lilac)}.step:nth-child(3){background:var(--peach)}.step:nth-child(4){background:var(--mint)}.num{font-family:Archivo,sans-serif;font-size:42px;line-height:1}.step h3{font-size:19px;margin:17px 0 7px}.step p{font-size:14px;color:#5f5952;margin:0}.features{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.feature{display:flex;gap:18px;align-items:flex-start;border:1.5px solid var(--ink);border-radius:16px;padding:22px;background:var(--surface);box-shadow:4px 4px 0 var(--ink)}.feature .icon{width:42px;height:42px;display:grid;place-items:center;background:var(--soft);border:1.5px solid var(--ink);border-radius:12px;font-size:21px;flex-shrink:0}.feature h3{margin:0 0 5px;font-size:18px}.feature p{margin:0;color:var(--muted);font-size:14px}.demo{background:var(--ink);color:var(--paper);border-radius:22px;padding:38px;display:grid;grid-template-columns:1fr 1fr;gap:36px;box-shadow:7px 7px 0 var(--peach)}.demo h2{font-family:Archivo,sans-serif;font-size:clamp(34px,5vw,56px);line-height:1;letter-spacing:-.06em;margin:0 0 16px}.demo p{color:#d5cec4}.demo .button{background:var(--paper);color:var(--ink);border-color:var(--paper);box-shadow:4px 4px 0 var(--peach)}.sample{border:1.5px solid #81796f;border-radius:16px;padding:20px;background:#2c2824}.sample-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#cfc6bb;font-weight:700}.sample h3{font-family:Archivo,sans-serif;font-size:25px;margin:10px 0 16px}.sample p{font-size:14px;color:#ded7cf;border-top:1px solid #5b544b;padding-top:12px}.quote{font-family:Archivo,sans-serif;font-size:clamp(27px,4vw,47px);line-height:1.08;letter-spacing:-.055em;max-width:850px}.quote span{color:#9a7bd6}.footer{border-top:1.5px solid var(--ink);padding:28px 0 40px;display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:13px}.footer a{font-weight:700;color:var(--ink)}
+    @media(max-width:820px){.nav a:not(.cta){display:none}.hero{grid-template-columns:1fr;padding:64px 0}.hero-art{min-height:330px}.story,.demo{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.features{grid-template-columns:1fr}.section-head{display:block}.section-head p{margin-top:14px}.footer{display:block}.footer div+div{margin-top:12px}}
+    @media(max-width:500px){.wrap{width:min(100% - 28px,1180px)}.hero h1{font-size:52px}.hero p{font-size:17px}.steps{grid-template-columns:1fr}.hero-art{transform:scale(.9);transform-origin:left top;margin-bottom:-30px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <a class="brand" href="/portfolio.html"><span>JS</span> JobSearch Portal</a>
+      <nav class="nav" aria-label="Portfolio navigation"><a href="#story">Why</a><a href="#flow">How it works</a><a href="#features">Features</a><a class="cta" href="/">Try the prototype ↗</a></nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">A role-aware application toolkit · Portfolio prototype</div>
+          <h1>Stop tailoring from scratch. <em>Start from fit.</em></h1>
+          <p>JobSearch Portal helps applicants turn one honest professional profile and one reference job into focused application materials for the role they actually want.</p>
+          <div class="actions"><a class="button" href="/">Try the working prototype ↗</a><a class="button secondary" href="#story">Explore the story ↓</a></div>
+        </div>
+        <div class="hero-art" aria-label="Illustration of the product workflow">
+          <div class="art-card one"><div class="mini-label">Target role</div><div class="mini-title">Legal Counsel</div><span class="mini-pill">Reference job</span><span class="mini-pill">Role profile</span></div>
+          <div class="art-card two"><div class="mini-label">Fit signal</div><div class="mini-title">Strong match on stakeholder leadership</div><div class="mini-line"></div><div class="mini-line short"></div></div>
+          <div class="art-card three"><div class="mini-label">Ready to send</div><div class="mini-title">Resume · Cover letter · Interview prep</div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="band"><div class="ticker"><span>Profile</span><b>→</b><span>Reference role</span><b>→</b><span>Fit criteria</span><b>→</b><span>Application materials</span><b>→</b><span>Interview readiness</span><b>→</b><span>Profile</span><b>→</b><span>Reference role</span><b>→</b></div></div>
+
+    <div class="wrap">
+      <section id="story">
+        <div class="section-head"><h2>The problem behind the product</h2><p>When every role needs a different version of your story, tailoring becomes a second job.</p></div>
+        <div class="story"><article class="story-card"><h3>Too many directions.</h3><p>Product, strategy, operations, legal, and everything adjacent can each require a different emphasis. A generic resume rarely tells the right story.</p></article><article class="story-card"><h3>One anchor makes it useful.</h3><p>Choose a target role and add one reference job. The prototype uses that anchor to focus the language, fit assessment, and preparation around a real opportunity.</p></article></div>
+      </section>
+
+      <section id="flow">
+        <div class="section-head"><h2>From profile to point of view</h2><p>A simple workflow designed around the decisions applicants actually make.</p></div>
+        <div class="steps"><article class="step"><div class="num">01</div><h3>Bring your evidence</h3><p>Add your background and upload a CV as the factual source of truth.</p></article><article class="step"><div class="num">02</div><h3>Pick a direction</h3><p>Create a role profile for each path you are seriously considering.</p></article><article class="step"><div class="num">03</div><h3>Anchor the role</h3><p>Paste a reference job so the tool learns the responsibilities and language that matter.</p></article><article class="step"><div class="num">04</div><h3>Make the case</h3><p>Generate tailored materials, inspect gaps, and prepare for the interview.</p></article></div>
+      </section>
+
+      <section id="features">
+        <div class="section-head"><h2>What the prototype can do</h2><p>Focused tools that turn the same evidence into different kinds of help.</p></div>
+        <div class="features"><article class="feature"><div class="icon">✦</div><div><h3>Role-aware resume tailoring</h3><p>Reframe real experience into focused, ATS-ready bullets without inventing achievements.</p></div></article><article class="feature"><div class="icon">◎</div><div><h3>Fit and gap analysis</h3><p>See where your experience maps, where it stretches, and what to address honestly.</p></div></article><article class="feature"><div class="icon">↗</div><div><h3>Application-ready outputs</h3><p>Create a cover letter, outreach note, and downloadable DOCX from the same role context.</p></div></article><article class="feature"><div class="icon">◌</div><div><h3>Interview preparation</h3><p>Practice role-specific questions with answers grounded in your actual professional story.</p></div></article></div>
+      </section>
+
+      <section>
+        <div class="demo"><div><div class="eyebrow" style="color:#cfc6bb">A small product, a larger ambition</div><h2>Make the application feel like a conversation with your best evidence.</h2><p>This prototype started as a personal tool for reducing repetitive tailoring work. It is being shaped into something that can support more people—and more kinds of roles.</p><a class="button" href="/">Open JobSearch Portal ↗</a></div><div class="sample"><div class="sample-label">Example output</div><h3>“Lead with the operating system you built—not the title you held.”</h3><p>The best application is not the one that says everything. It is the one that makes the relevant connection obvious.</p></div></div>
+      </section>
+
+      <section style="padding-top:10px"><p class="quote">A better application is not a louder one. It is a more <span>specific</span> one.</p></section>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="wrap" style="display:flex;justify-content:space-between;gap:20px;width:100%"><div>JobSearch Portal · Portfolio prototype</div><div><a href="/">Try the product</a> · <a href="#story">Back to top ↑</a></div></div></footer>
+</body>
+</html>
