@@ -346,6 +346,13 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 .col-modal .opts-field { display: none; margin-bottom: 16px; }
 .col-modal .opts-field.visible { display: block; }
 </style>
+<style>
+/* Product landing page */
+.landing-hero{background:linear-gradient(135deg,#121b33 0%,#1d2c55 55%,#3b4fa0 100%);border-radius:16px;padding:42px;color:#fff;position:relative;overflow:hidden;margin-bottom:22px;box-shadow:0 18px 36px rgba(24,39,80,.18)}
+.landing-hero:after{content:"";position:absolute;width:280px;height:280px;border:1px solid rgba(255,255,255,.18);border-radius:50%;right:-90px;top:-110px;box-shadow:0 0 0 28px rgba(255,255,255,.04),0 0 0 56px rgba(255,255,255,.03)}
+.landing-kicker{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#b9c6ff;font-weight:600;margin-bottom:15px}.landing-hero h2{font-size:clamp(32px,5vw,52px);line-height:1.02;letter-spacing:-.06em;max-width:650px;margin:0 0 15px}.landing-hero p{color:#d2d9ed;line-height:1.65;max-width:600px;margin:0 0 25px}.landing-actions{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}.landing-actions .btn-primary{background:#fff;color:#20336e;box-shadow:none}.landing-actions .btn-secondary{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)}.landing-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}.landing-step{background:#fff;border:1px solid var(--border);border-radius:10px;padding:17px;min-height:120px}.landing-step .step-num{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em}.landing-step h3{font-size:14px;margin:17px 0 5px}.landing-step p{font-size:12px;color:var(--muted);line-height:1.45;margin:0}.landing-section-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 11px}.landing-why{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.landing-why-card{background:#fff;border:1px solid var(--border);border-radius:11px;padding:22px}.landing-why-card h3{font-size:18px;letter-spacing:-.03em;margin:0 0 8px}.landing-why-card p{color:var(--muted);font-size:13px;line-height:1.6;margin:0}.landing-why-card.accent{background:#eef2ff;border-color:#cbd5ff}.landing-tool-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.landing-tool{border:1px solid rgba(55,93,251,.2);border-radius:7px;padding:10px;background:rgba(255,255,255,.65);font-size:12px;color:#344054}.landing-tool strong{display:block;color:var(--ink);margin-bottom:2px}
+@media(max-width:700px){.landing-hero{padding:28px 24px}.landing-flow{grid-template-columns:1fr 1fr}.landing-why{grid-template-columns:1fr}}@media(max-width:460px){.landing-flow,.landing-tool-list{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
@@ -555,31 +562,25 @@ Examples:
 
       <!-- ═══════════════════════════════════ HOME ═══ -->
       <div class="panel" id="panel-home">
-        <div class="welcome">
-          <h2>What are we working on?</h2>
-          <p>Your AI job application co-pilot, loaded with your background. Pick a tool to get started.</p>
-          <div class="welcome-grid">
-            <div class="welcome-card" onclick="switchMode('tailor')">
-              <div class="card-icon">✦</div>
-              <h3>Tailor Resume</h3>
-              <p>Reframe your bullets for a specific JD and role type</p>
-            </div>
-            <div class="welcome-card" onclick="switchMode('cover')">
-              <div class="card-icon">✉</div>
-              <h3>Cover Letter</h3>
-              <p>Write a compelling, personalised cover letter fast</p>
-            </div>
-            <div class="welcome-card" onclick="switchMode('outreach')">
-              <div class="card-icon">↗</div>
-              <h3>Cold Outreach</h3>
-              <p>DM or email to a hiring manager or recruiter</p>
-            </div>
-            <div class="welcome-card" onclick="switchMode('gap')">
-              <div class="card-icon">◎</div>
-              <h3>Gap Analysis</h3>
-              <p>Find what's missing and how to address it</p>
-            </div>
+        <div class="landing-hero">
+          <div class="landing-kicker">JobSearch Portal · role-aware applications</div>
+          <h2>Make the relevant part of your story impossible to miss.</h2>
+          <p>Start with your real experience, choose a target direction, and anchor it with a reference job. The Portal helps you turn that context into focused application materials and interview preparation.</p>
+          <div class="landing-actions">
+            <button class="btn-primary" onclick="switchMode('setup')">Set up my profile →</button>
+            <button class="btn-secondary" onclick="switchMode('tailor')">Jump to a tool</button>
           </div>
+        </div>
+        <div class="landing-section-label">A focused workflow</div>
+        <div class="landing-flow">
+          <div class="landing-step"><div class="step-num">01</div><h3>Bring your evidence</h3><p>Add your background and CV as the factual source.</p></div>
+          <div class="landing-step"><div class="step-num">02</div><h3>Choose a direction</h3><p>Create a profile for the role you want to pursue.</p></div>
+          <div class="landing-step"><div class="step-num">03</div><h3>Anchor the role</h3><p>Add one reference job to focus the recommendations.</p></div>
+          <div class="landing-step"><div class="step-num">04</div><h3>Make the case</h3><p>Generate, refine, download, and prepare.</p></div>
+        </div>
+        <div class="landing-why">
+          <div class="landing-why-card accent"><h3>Built for non-linear searches.</h3><p>One person can be a product operator, strategist, lawyer, or something adjacent. The Portal lets each direction have its own anchor instead of forcing every application through one generic template.</p><div class="landing-tool-list"><div class="landing-tool"><strong>Tailor Resume</strong>Role-specific bullets</div><div class="landing-tool"><strong>Gap Analysis</strong>Honest fit signals</div><div class="landing-tool"><strong>Interview Prep</strong>Evidence-based practice</div><div class="landing-tool"><strong>DOCX export</strong>Ready to edit and send</div></div></div>
+          <div class="landing-why-card"><h3>Start with the truth.</h3><p>The assistant reframes your experience, but it does not invent it. You stay in control of what is accurate, relevant, and worth sending.</p><button class="btn-secondary" style="margin-top:18px" onclick="switchMode('setup')">Complete setup</button></div>
         </div>
       </div>
 
@@ -2759,7 +2760,7 @@ updateUI();
 
 // If no profile, start on setup; otherwise start on home
 const isFirstTime = !userProfile.background && !apiKey;
-switchMode(isFirstTime ? 'setup' : 'home');
+switchMode('home');
 if (isFirstTime) populateSetupForm();
 </script>
 </body>
