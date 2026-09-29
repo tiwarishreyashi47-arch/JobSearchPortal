@@ -2277,7 +2277,9 @@ function extractJDText(html, url) {
       const data = JSON.parse(script.textContent);
       const items = Array.isArray(data) ? data : [data];
       for (const item of items) {
-        if (item['@type'] === 'JobPosting' && item.description) {
+        const itemType = item['@type'];
+        const isJobPosting = itemType === 'JobPosting' || (Array.isArray(itemType) && itemType.includes('JobPosting'));
+        if (isJobPosting && item.description) {
           const tmp = document.createElement('div');
           tmp.innerHTML = item.description;
           const text = cleanJDText(tmp.textContent);
@@ -2306,6 +2308,10 @@ function extractJDText(html, url) {
     'workday.com':      ['[data-automation-id="jobPostingDescription"]','[class*="description"]'],
     'jobs.ashbyhq.com': ['[class*="description"]','[class*="job"]','main'],
     'wellfound.com':    ['[class*="description"]','[class*="job-detail"]','main'],
+    'smartrecruiters.com': ['[class*="job-description"]','[class*="job-sections"]','main'],
+    'jobvite.com':      ['[class*="job-description"]','[class*="posting"]','main'],
+    'breezy.hr':        ['[class*="description"]','[class*="posting"]','main'],
+    'myworkdayjobs.com':['[data-automation-id="jobPostingDescription"]','[class*="description"]','main'],
   };
 
   const genericSelectors = [
