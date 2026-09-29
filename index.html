@@ -623,7 +623,7 @@ Examples:
         <div class="field">
           <label class="field-label">Job Description</label>
           <div class="jd-fetch-row">
-            <input type="text" class="jd-url-input" id="tailor-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <input type="url" class="jd-url-input" id="tailor-jd-url" aria-label="Job description URL" placeholder="Paste a job URL to auto-fetch the description…">
             <button class="jd-fetch-btn" onclick="fetchJD('tailor-jd-url', 'tailor-jd', 'tailor-jd-status')">
               <span class="spinner" id="tailor-jd-spinner"></span>
               <span id="tailor-jd-btn-text">Fetch ↓</span>
@@ -634,7 +634,7 @@ Examples:
           </div>
           <div class="jd-fetch-status" id="tailor-jd-status"></div>
           <div class="jd-divider"><span>or paste below</span></div>
-          <textarea id="tailor-jd" rows="7" placeholder="Paste the full job description here…"></textarea>
+          <textarea id="tailor-jd" rows="7" aria-label="Job description text" placeholder="Paste the full job description here…"></textarea>
         </div>
 
         <div class="field" id="tailor-resume-field">
@@ -762,7 +762,7 @@ Examples:
         <div class="field">
           <label class="field-label">Job Description (or key requirements)</label>
           <div class="jd-fetch-row">
-            <input type="text" class="jd-url-input" id="cover-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <input type="url" class="jd-url-input" id="cover-jd-url" aria-label="Job description URL" placeholder="Paste a job URL to auto-fetch the description…">
             <button class="jd-fetch-btn" onclick="fetchJD('cover-jd-url', 'cover-jd', 'cover-jd-status')">
               <span class="spinner" id="cover-jd-spinner"></span>
               <span id="cover-jd-btn-text">Fetch ↓</span>
@@ -773,7 +773,7 @@ Examples:
           </div>
           <div class="jd-fetch-status" id="cover-jd-status"></div>
           <div class="jd-divider"><span>or paste below</span></div>
-          <textarea id="cover-jd" rows="5" placeholder="Paste the JD or summarise what they're looking for…"></textarea>
+          <textarea id="cover-jd" rows="5" aria-label="Job description text" placeholder="Paste the JD or summarise what they're looking for…"></textarea>
         </div>
         <div class="field">
           <label class="field-label">Why this role / company?</label>
@@ -927,7 +927,7 @@ Examples:
         <div class="field">
           <label class="field-label">Job Description</label>
           <div class="jd-fetch-row">
-            <input type="text" class="jd-url-input" id="gap-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <input type="url" class="jd-url-input" id="gap-jd-url" aria-label="Job description URL" placeholder="Paste a job URL to auto-fetch the description…">
             <button class="jd-fetch-btn" onclick="fetchJD('gap-jd-url', 'gap-jd', 'gap-jd-status')">
               <span class="spinner" id="gap-jd-spinner"></span>
               <span id="gap-jd-btn-text">Fetch ↓</span>
@@ -938,7 +938,7 @@ Examples:
           </div>
           <div class="jd-fetch-status" id="gap-jd-status"></div>
           <div class="jd-divider"><span>or paste below</span></div>
-          <textarea id="gap-jd" rows="7" placeholder="Paste the full job description…"></textarea>
+          <textarea id="gap-jd" rows="7" aria-label="Job description text" placeholder="Paste the full job description…"></textarea>
         </div>
         <div class="field">
           <label class="field-label">Target Role Profile</label>
@@ -1009,7 +1009,7 @@ Examples:
         <div class="field">
           <label class="field-label">Job Description / Role</label>
           <div class="jd-fetch-row">
-            <input type="text" class="jd-url-input" id="interview-jd-url" placeholder="Paste a job URL to auto-fetch the description…">
+            <input type="url" class="jd-url-input" id="interview-jd-url" aria-label="Job description URL" placeholder="Paste a job URL to auto-fetch the description…">
             <button class="jd-fetch-btn" onclick="fetchJD('interview-jd-url', 'interview-jd', 'interview-jd-status')">
               <span class="spinner" id="interview-jd-spinner"></span>
               <span id="interview-jd-btn-text">Fetch ↓</span>
@@ -1020,7 +1020,7 @@ Examples:
           </div>
           <div class="jd-fetch-status" id="interview-jd-status"></div>
           <div class="jd-divider"><span>or paste below</span></div>
-          <textarea id="interview-jd" rows="4" placeholder="Paste the JD or describe the role…"></textarea>
+          <textarea id="interview-jd" rows="4" aria-label="Job description or role text" placeholder="Paste the JD or describe the role…"></textarea>
         </div>
         <div class="field">
           <label class="field-label">Target Role Profile</label>
