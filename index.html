@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Job Application Assistant · Gemini</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/docx@9.8.1/dist/index.umd.cjs"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -31,6 +32,19 @@ body { background: var(--paper); color: var(--ink); font-family: var(--sans); fo
 
 /* Layout */
 .shell { display: flex; min-height: 100vh; }
+
+/* Role profiles and document export */
+.role-profile-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; background: #fffdf9; }
+.role-profile-card .field { margin-bottom: 12px; }
+.role-profile-card .field:last-child { margin-bottom: 0; }
+.role-profile-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.role-profile-title { font-size:13px; font-weight:600; color:var(--ink); }
+.role-profile-remove { border:0; background:transparent; color:var(--red); cursor:pointer; font-size:12px; }
+.role-profile-select { width:100%; }
+.export-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.export-btn { border:1px solid var(--border-dark); background:var(--paper); color:var(--ink); border-radius:4px; padding:7px 11px; font:500 12px var(--sans); cursor:pointer; }
+.export-btn:hover { border-color:var(--gold); background:var(--gold-light); }
+.server-note { font-size:12px; color:var(--muted); line-height:1.55; margin-top:8px; }
 
 /* Hamburger button */
 .hamburger-btn {
@@ -403,7 +417,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
       <div class="panel active" id="panel-setup">
         <div class="page-header">
           <h2>My Profile</h2>
-          <p>Enter your background, upload your resume(s), and add your free Gemini API key. Everything is saved locally in your browser.</p>
+          <p>Enter your background, upload your resume(s), and define the roles you want to target. Your profile stays in your browser.</p>
         </div>
 
         <div class="success-box" id="setup-success">
@@ -414,7 +428,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
         <div class="setup-section">
           <div class="setup-section-header">
             <div class="setup-section-num">1</div>
-            <div class="setup-section-title">API Key <span>Free · No credit card · Google account only</span></div>
+            <div class="setup-section-title">AI Access <span>Optional for local use · deployed app uses secure server access</span></div>
           </div>
           <div class="field">
             <label class="field-label">Google Gemini API Key</label>
@@ -423,9 +437,10 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
               <button class="api-key-toggle" onclick="toggleApiKeyVisibility()" id="api-key-toggle-btn">Show</button>
             </div>
             <p class="api-key-note">
-              Get a free key in 60 seconds — go to <strong>aistudio.google.com</strong>, sign in with Google, click <strong>Get API key → Create API key</strong>. No credit card needed.<br><br>
+              For local use, get a free key at <strong>aistudio.google.com</strong>. On the deployed version, the app can use the Vercel environment key instead.<br><br>
               ⚠ <strong>Privacy note:</strong> On the free tier, Google may use your prompts to improve their models. Avoid pasting highly sensitive personal info. Stored only in your browser's local storage.
             </p>
+            <p class="server-note">If no local key is provided, the app will call the secure Vercel generation endpoint.</p>
           </div>
         </div>
 
@@ -488,10 +503,23 @@ Examples:
           </div>
         </div>
 
-        <!-- Section 5: Resume Variants -->
+        <!-- Section 5: Target Roles -->
         <div class="setup-section">
           <div class="setup-section-header">
             <div class="setup-section-num">5</div>
+            <div class="setup-section-title">Target Role Profiles <span>Anchor each role with one reference job</span></div>
+          </div>
+          <p style="font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6;">
+            Add the kinds of roles you want to pursue. A reference job description helps the assistant learn the responsibilities, skills, and language to use when tailoring your application.
+          </p>
+          <div id="role-profiles-list"></div>
+          <button class="btn-add" onclick="addRoleProfile()" id="add-role-profile-btn">+ Add target role</button>
+        </div>
+
+        <!-- Section 6: Resume Variants -->
+        <div class="setup-section">
+          <div class="setup-section-header">
+            <div class="setup-section-num">6</div>
             <div class="setup-section-title">Resume Variants <span>Optional — add one or more tailored versions</span></div>
           </div>
           <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6;">
@@ -593,6 +621,14 @@ Examples:
         </div>
 
         <div class="field">
+          <label class="field-label">Target Role Profile</label>
+          <select id="tailor-role-profile-select" class="role-profile-select" onchange="updateRoleProfileHint('tailor')">
+            <option value="">Use the selected role below</option>
+          </select>
+          <div class="server-note" id="tailor-role-profile-hint">Choose a saved role profile to use its reference criteria.</div>
+        </div>
+
+        <div class="field">
           <label class="field-label">Role Type</label>
           <div class="pill-row" id="tailor-role-pills">
             <div class="pill selected" data-val="Product Manager">Product Manager</div>
@@ -606,6 +642,7 @@ Examples:
             <div class="pill" data-val="Data Analyst">Data Analyst</div>
             <div class="pill" data-val="Marketing Manager">Marketing Manager</div>
           </div>
+          <input type="text" id="tailor-custom-role" placeholder="Or type a custom role, e.g. Legal Counsel">
         </div>
 
         <div class="field">
@@ -684,6 +721,13 @@ Examples:
             <label class="field-label">Role Title</label>
             <input type="text" id="cover-role" placeholder="e.g. Product Manager, Chief of Staff…">
           </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Target Role Profile</label>
+          <select id="cover-role-profile-select" class="role-profile-select" onchange="updateRoleProfileHint('cover')">
+            <option value="">Use the role title below</option>
+          </select>
+          <div class="server-note" id="cover-role-profile-hint">Choose a saved role profile to anchor the letter.</div>
         </div>
         <div class="field">
           <label class="field-label">Job Description (or key requirements)</label>
@@ -867,6 +911,14 @@ Examples:
           <textarea id="gap-jd" rows="7" placeholder="Paste the full job description…"></textarea>
         </div>
         <div class="field">
+          <label class="field-label">Target Role Profile</label>
+          <select id="gap-role-profile-select" class="role-profile-select" onchange="updateRoleProfileHint('gap')">
+            <option value="">Use the selected role below</option>
+          </select>
+          <div class="server-note" id="gap-role-profile-hint">Choose a saved role profile to use its reference criteria.</div>
+        </div>
+
+        <div class="field">
           <label class="field-label">Role Type</label>
           <div class="pill-row" id="gap-role-pills">
             <div class="pill selected" data-val="Product Manager">Product Manager</div>
@@ -878,6 +930,7 @@ Examples:
             <div class="pill" data-val="Software Engineer">Software Engineer</div>
             <div class="pill" data-val="Data Analyst">Data Analyst</div>
           </div>
+          <input type="text" id="gap-custom-role" placeholder="Or type a custom role, e.g. Compliance Counsel">
         </div>
         <div class="btn-row">
           <button class="btn-primary" id="gap-btn" onclick="generate('gap')">
@@ -938,6 +991,13 @@ Examples:
           <div class="jd-fetch-status" id="interview-jd-status"></div>
           <div class="jd-divider"><span>or paste below</span></div>
           <textarea id="interview-jd" rows="4" placeholder="Paste the JD or describe the role…"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Target Role Profile</label>
+          <select id="interview-role-profile-select" class="role-profile-select" onchange="updateRoleProfileHint('interview')">
+            <option value="">Use the job description below</option>
+          </select>
+          <div class="server-note" id="interview-role-profile-hint">Choose a saved role profile to anchor interview preparation.</div>
         </div>
         <div class="field">
           <label class="field-label">Interview Round / Type</label>
@@ -1059,10 +1119,11 @@ Examples:
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let userProfile = { name: '', title: '', background: '', cvContent: '' };
+let userProfile = { name: '', title: '', background: '', cvContent: '', roleProfiles: [] };
 let userResumes  = [];   // [{ label, hint, content }]
 let apiKey       = '';
 let variantCount = 0;
+let roleProfileCount = 0;
 const histories  = {};
 
 // ─── PERSISTENCE ──────────────────────────────────────────────────────────────
@@ -1070,6 +1131,7 @@ function loadSaved() {
   try {
     const p = localStorage.getItem('jaa_profile');
     if (p) userProfile = JSON.parse(p);
+    if (!Array.isArray(userProfile.roleProfiles)) userProfile.roleProfiles = [];
     const r = localStorage.getItem('jaa_resumes');
     if (r) userResumes = JSON.parse(r);
     const k = localStorage.getItem('jaa_api_key');
@@ -1089,6 +1151,8 @@ function populateSetupForm() {
   if (userProfile.name) document.getElementById('setup-name').value = userProfile.name;
   if (userProfile.title) document.getElementById('setup-title').value = userProfile.title;
   if (userProfile.background) document.getElementById('setup-background').value = userProfile.background;
+
+  renderRoleProfiles();
 
   // Restore CV upload state — show chip if CV was previously uploaded
   if (userProfile.cvContent) {
@@ -1115,6 +1179,7 @@ function saveSetup() {
   userProfile.name       = document.getElementById('setup-name').value.trim();
   userProfile.title      = document.getElementById('setup-title').value.trim();
   userProfile.background = document.getElementById('setup-background').value.trim();
+  userProfile.roleProfiles = readRoleProfiles();
   // userProfile.cvContent is updated directly by handleCvUpload — no textarea to read
 
   // Read resume variants from DOM
@@ -1148,19 +1213,113 @@ function clearSetup() {
   localStorage.removeItem('jaa_cache_name');
   localStorage.removeItem('jaa_cache_hash');
   localStorage.removeItem('jaa_cache_expire');
-  userProfile = { name: '', title: '', background: '', cvContent: '', cvFileName: '' };
+  userProfile = { name: '', title: '', background: '', cvContent: '', cvFileName: '', roleProfiles: [] };
   userResumes = [];
   apiKey = '';
+  roleProfileCount = 0;
   populateSetupForm();
   updateUI();
   updateCacheStatus(null);
 }
 
+// ─── TARGET ROLE PROFILES ────────────────────────────────────────────────────
+function renderRoleProfiles() {
+  const list = document.getElementById('role-profiles-list');
+  if (!list) return;
+  list.innerHTML = '';
+  roleProfileCount = 0;
+  const profiles = Array.isArray(userProfile.roleProfiles) ? userProfile.roleProfiles : [];
+  profiles.forEach(profile => addRoleProfile(profile));
+}
+
+function addRoleProfile(profile = {}) {
+  const list = document.getElementById('role-profiles-list');
+  if (!list) return;
+  const index = roleProfileCount++;
+  const card = document.createElement('div');
+  card.className = 'role-profile-card';
+  card.dataset.index = index;
+  card.innerHTML = `
+    <div class="role-profile-head">
+      <span class="role-profile-title">Target role ${index + 1}</span>
+      <button type="button" class="role-profile-remove" onclick="removeRoleProfile(${index})">Remove</button>
+    </div>
+    <div class="field">
+      <label class="field-label">Role name</label>
+      <input class="rp-label" type="text" placeholder="e.g. Legal Counsel, Product Manager">
+    </div>
+    <div class="field">
+      <label class="field-label">Reference job URL (optional)</label>
+      <input class="rp-url" type="url" placeholder="https://…">
+    </div>
+    <div class="field">
+      <label class="field-label">Reference job description</label>
+      <textarea class="rp-reference" rows="4" placeholder="Paste one representative job description here…"></textarea>
+    </div>`;
+  list.appendChild(card);
+  card.querySelector('.rp-label').value = profile.label || '';
+  card.querySelector('.rp-url').value = profile.url || '';
+  card.querySelector('.rp-reference').value = profile.reference || '';
+}
+
+function removeRoleProfile(index) {
+  document.querySelector(`.role-profile-card[data-index="${index}"]`)?.remove();
+}
+
+function readRoleProfiles() {
+  return [...document.querySelectorAll('.role-profile-card')].map(card => ({
+    label: card.querySelector('.rp-label')?.value.trim() || '',
+    url: card.querySelector('.rp-url')?.value.trim() || '',
+    reference: card.querySelector('.rp-reference')?.value.trim() || ''
+  })).filter(profile => profile.label || profile.url || profile.reference);
+}
+
+function populateRoleProfileSelectors() {
+  const profiles = Array.isArray(userProfile.roleProfiles) ? userProfile.roleProfiles : [];
+  ['tailor', 'gap', 'cover', 'interview'].forEach(mode => {
+    const select = document.getElementById(`${mode}-role-profile-select`);
+    if (!select) return;
+    const previous = select.value;
+    select.innerHTML = '<option value="">Use the selected role below</option>';
+    profiles.forEach((profile, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = profile.label || `Target role ${index + 1}`;
+      select.appendChild(option);
+    });
+    if (previous && profiles[Number(previous)]) select.value = previous;
+    updateRoleProfileHint(mode);
+  });
+}
+
+function getSelectedRoleProfile(mode) {
+  const select = document.getElementById(`${mode}-role-profile-select`);
+  const index = select?.value;
+  if (index === '' || index == null) return null;
+  return userProfile.roleProfiles?.[Number(index)] || null;
+}
+
+function updateRoleProfileHint(mode) {
+  const profile = getSelectedRoleProfile(mode);
+  const hint = document.getElementById(`${mode}-role-profile-hint`);
+  if (!hint) return;
+  hint.textContent = profile
+    ? `${profile.label || 'Saved role'} selected${profile.reference ? ' · reference criteria will guide the analysis' : ' · add a reference in My Profile for stronger recommendations'}.`
+    : 'Choose a saved role profile to use its reference criteria.';
+}
+
+function getTargetRole(mode) {
+  const custom = document.getElementById(`${mode}-custom-role`)?.value.trim();
+  if (custom) return custom;
+  const selected = getSelectedRoleProfile(mode);
+  if (selected?.label) return selected.label;
+  return document.getElementById(`${mode}-role`)?.value.trim() || getSelected(`${mode}-role-pills`);
+}
+
 // ─── UPDATE GLOBAL UI STATE ──────────────────────────────────────────────────
 function updateUI() {
   const hasProfile  = !!(userProfile.cvContent || userProfile.background || userProfile.name);
-  const hasApiKey   = !!apiKey;
-  const isComplete  = hasProfile && hasApiKey;
+  const isComplete  = hasProfile;
 
   // Sidebar profile chip
   const name = userProfile.name || 'Your Profile';
@@ -1210,6 +1369,8 @@ function updateUI() {
     });
     updateResumeBadge();
   }
+
+  populateRoleProfileSelectors();
 }
 
 // ─── FILE UPLOADS ──────────────────────────────────────────────────────────────
@@ -1501,7 +1662,8 @@ function buildUserMessage(mode) {
   if (mode === 'tailor') {
     const jd = g('tailor-jd');
     if (!jd) return null;
-    const role     = getSelected('tailor-role-pills');
+    const role     = getTargetRole('tailor');
+    const roleProfile = getSelectedRoleProfile('tailor');
     const emphasis = getSelected('tailor-emphasis-pills');
     const notes    = g('tailor-notes');
     const selVal   = document.getElementById('tailor-resume-select').value;
@@ -1513,13 +1675,16 @@ function buildUserMessage(mode) {
       const rv  = userResumes[idx];
       if (rv) resumeSection = `SELECTED RESUME (${rv.label}):\n${rv.content}`;
     }
-    return `${resumeSection}\n\n---\nTarget role type: ${role}\nEmphasise: ${emphasis}\n${notes ? `Notes: ${notes}\n` : ''}\nJOB DESCRIPTION:\n${jd}`;
+    const anchor = roleProfile?.reference ? `\nREFERENCE ROLE PROFILE:\n${roleProfile.reference}\n` : '';
+    return `${resumeSection}\n\n---\nTarget role type: ${role}\n${anchor}Emphasise: ${emphasis}\n${notes ? `Notes: ${notes}\n` : ''}\nJOB DESCRIPTION:\n${jd}`;
   }
 
   if (mode === 'cover') {
-    const jd = g('cover-jd'), role = g('cover-role');
+    const jd = g('cover-jd'), role = getTargetRole('cover');
     if (!jd && !role) return null;
-    return `Company: ${g('cover-company') || 'not specified'}\nRole: ${role || 'not specified'}\nTone: ${getSelected('cover-tone-pills')}\nLength: ${getSelected('cover-length-pills')}\n${g('cover-why') ? `Why this role/company: ${g('cover-why')}\n` : ''}\nJOB DESCRIPTION:\n${jd}`;
+    const roleProfile = getSelectedRoleProfile('cover');
+    const anchor = roleProfile?.reference ? `\nREFERENCE ROLE PROFILE:\n${roleProfile.reference}\n` : '';
+    return `Company: ${g('cover-company') || 'not specified'}\nRole: ${role || 'not specified'}${anchor}\nTone: ${getSelected('cover-tone-pills')}\nLength: ${getSelected('cover-length-pills')}\n${g('cover-why') ? `Why this role/company: ${g('cover-why')}\n` : ''}\nJOB DESCRIPTION:\n${jd}`;
   }
 
   if (mode === 'outreach') {
@@ -1531,13 +1696,17 @@ function buildUserMessage(mode) {
   if (mode === 'gap') {
     const jd = g('gap-jd');
     if (!jd) return null;
-    return `Target role type: ${getSelected('gap-role-pills')}\n\nJOB DESCRIPTION:\n${jd}`;
+    const roleProfile = getSelectedRoleProfile('gap');
+    const anchor = roleProfile?.reference ? `\nREFERENCE ROLE PROFILE:\n${roleProfile.reference}\n` : '';
+    return `Target role type: ${getTargetRole('gap')}${anchor}\n\nJOB DESCRIPTION:\n${jd}`;
   }
 
   if (mode === 'interview') {
     const jd = g('interview-jd');
     if (!jd) return null;
-    return `Interview type: ${getSelected('interview-type-pills')}\nNumber of Q&As: ${getSelected('interview-count-pills')}\n\nROLE / JD:\n${jd}`;
+    const roleProfile = getSelectedRoleProfile('interview');
+    const anchor = roleProfile?.reference ? `\nREFERENCE ROLE PROFILE:\n${roleProfile.reference}\n` : '';
+    return `Target role: ${roleProfile?.label || 'Use the role described below'}${anchor}\nInterview type: ${getSelected('interview-type-pills')}\nNumber of Q&As: ${getSelected('interview-count-pills')}\n\nROLE / JD:\n${jd}`;
   }
 
   return null;
@@ -1545,7 +1714,6 @@ function buildUserMessage(mode) {
 
 // ─── GENERATE ─────────────────────────────────────────────────────────────────
 async function generate(mode) {
-  if (!apiKey) { showToast('⚠ Add your Gemini API key in Setup first'); switchMode('setup'); return; }
   if (!userProfile.background && !userProfile.name) { showToast('⚠ Complete your profile setup first'); switchMode('setup'); return; }
 
   const userMsg = buildUserMessage(mode);
@@ -1622,6 +1790,25 @@ async function callAPI(mode, messages, skipCache = false) {
     parts: [{ text: m.content }]
   }));
 
+  // Deployed builds use the Vercel serverless endpoint so the API key never reaches the browser.
+  if (!apiKey) {
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: getSystemPrompt(mode),
+          messages,
+          generationConfig: genConfig
+        })
+      });
+      const data = await response.json();
+      return data.error ? `Error: ${data.error}` : (data.text || null);
+    } catch (err) {
+      return `Error: ${err.message}`;
+    }
+  }
+
   const body = cacheName
     ? {
         cachedContent: cacheName,
@@ -1672,6 +1859,7 @@ function addIteration(mode, text, ver, isCurrent) {
     <div class="history-head">
       <span class="version-badge ${isCurrent ? 'latest' : ''}">v${ver}${isCurrent ? ' · latest' : ''}</span>
       <button class="icon-btn" onclick="copyIteration(this)">Copy</button>
+      <button class="icon-btn" onclick="exportDocx(this, '${mode}')">Download DOCX</button>
     </div>
     <div class="history-body ${isCurrent ? '' : 'stale'}"></div>
   `;
@@ -1700,6 +1888,50 @@ function escHtml(s) {
 function copyIteration(btn) {
   const text = btn.closest('.history-item').dataset.text;
   if (text) navigator.clipboard.writeText(text).then(showToast);
+}
+
+async function exportDocx(btn, mode) {
+  const text = btn.closest('.history-item')?.dataset.text || '';
+  if (!text) return;
+  if (!window.docx) { showToast('DOCX export is unavailable — refresh and try again'); return; }
+
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
+  const titles = {
+    tailor: 'Tailored Resume',
+    cover: 'Cover Letter',
+    outreach: 'Outreach Message',
+    gap: 'Role Fit Analysis',
+    interview: 'Interview Preparation'
+  };
+  const title = titles[mode] || 'Job Application Document';
+  const children = [
+    new Paragraph({ text: title, heading: HeadingLevel.TITLE }),
+    new Paragraph({ text: `${userProfile.name || 'Applicant'} · ${new Date().toLocaleDateString()}`, spacing: { after: 240 } })
+  ];
+
+  text.split(/\r?\n/).forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      children.push(new Paragraph({ text: '' }));
+      return;
+    }
+    const bullet = /^[-•*]\s+/.test(trimmed);
+    const clean = bullet ? trimmed.replace(/^[-•*]\s+/, '') : trimmed;
+    children.push(new Paragraph({
+      children: [new TextRun({ text: clean })],
+      bullet: bullet ? { level: 0 } : undefined,
+      spacing: { after: 100 }
+    }));
+  });
+
+  const docFile = new Document({ sections: [{ children }] });
+  const blob = await Packer.toBlob(docFile);
+  const url = URL.createObjectURL(blob);
+  const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${new Date().toISOString().slice(0, 10)}.docx`;
+  const link = Object.assign(document.createElement('a'), { href: url, download: filename });
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('DOCX downloaded');
 }
 
 function copyLatest(mode) {
