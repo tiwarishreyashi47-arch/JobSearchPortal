@@ -2,6 +2,8 @@ const MODEL = 'gemini-2.5-flash';
 const MAX_REQUEST_BYTES = 120000;
 
 module.exports = async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
