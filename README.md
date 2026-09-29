@@ -16,6 +16,8 @@ The first Phase 2 slice is authenticated cloud persistence. The Supabase schema 
 
 The planned migration is user-scoped storage for profiles, target role profiles, resume variants, and job applications. Automatic job discovery, recommendation history, and collaboration remain later Phase 2 slices.
 
+The account UI is enabled automatically when `SUPABASE_URL` and `SUPABASE_ANON_KEY` are present in the deployment. Without them, the app intentionally keeps the Phase 1 browser-only behavior.
+
 ## Local development
 
 Open `index.html` with a local static server. For local-only use, a Gemini API key can be entered in My Profile. In a deployed Vercel project, set `GEMINI_API_KEY` in the project environment variables; the `/api/generate` function will use it without exposing the key to the browser.

@@ -1304,8 +1304,8 @@ async function syncTrackerToCloud() {
   if (remove.error) throw remove.error;
   const rows = (trackerData.jobs || []).map(job => ({
     user_id: cloudUser.id, company: job.company || '', role: job.role || '', stage: job.stage || 'Wishlist',
-    date_applied: job.date || null, notes: job.notes || '',
-    custom_fields: Object.fromEntries(Object.entries(job).filter(([key]) => !['id','company','role','stage','date','notes'].includes(key)))
+    date_applied: job.dateApplied || null, notes: job.notes || '',
+    custom_fields: Object.fromEntries(Object.entries(job).filter(([key]) => !['id','company','role','stage','date','dateApplied','notes'].includes(key)))
   }));
   if (rows.length) { const result = await cloudClient.from('job_applications').insert(rows); if (result.error) throw result.error; }
 }
@@ -1330,7 +1330,7 @@ async function restoreFromCloud() {
     userResumes = (resumesResult.data || []).map(resume => ({ label: resume.label, hint: resume.hint, content: resume.content }));
     trackerData = {
       columns: Array.isArray(p.tracker_columns) ? p.tracker_columns : [],
-      jobs: (jobsResult.data || []).map(job => ({ id: job.id, company: job.company, role: job.role, stage: job.stage, date: job.date_applied || '', notes: job.notes || '', ...(job.custom_fields || {}) }))
+      jobs: (jobsResult.data || []).map(job => ({ id: job.id, company: job.company, role: job.role, stage: job.stage, dateApplied: job.date_applied || '', notes: job.notes || '', ...(job.custom_fields || {}) }))
     };
     localStorage.setItem('jaa_profile', JSON.stringify(userProfile));
     localStorage.setItem('jaa_resumes', JSON.stringify(userResumes));
