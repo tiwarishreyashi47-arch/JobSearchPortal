@@ -94,6 +94,9 @@ body { background: var(--paper); color: var(--ink); font-family: var(--sans); fo
 .profile-name { font-size: 12px; font-weight: 500; color: var(--paper); line-height: 1.3; }
 .profile-role { font-size: 11px; color: rgba(255,255,255,0.4); }
 .profile-setup-link { font-size: 11px; color: var(--gold); cursor: pointer; text-decoration: underline; margin-top: 4px; display: block; }
+.cloud-account { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
+.cloud-account-status { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.45; margin-bottom: 8px; }
+.cloud-account button { width: 100%; padding: 7px 10px; font-size: 11px; }
 
 /* Main area */
 .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; width: 100%; }
@@ -435,6 +438,10 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
           <div class="profile-name" id="sidebar-name">No profile yet</div>
           <div class="profile-role" id="sidebar-role">Complete setup to begin</div>
         </div>
+      </div>
+      <div class="cloud-account" id="cloud-account" hidden>
+        <div class="cloud-account-status" id="cloud-account-status">Cloud sync is not configured.</div>
+        <button class="btn-secondary" id="cloud-account-action" onclick="handleCloudAccountAction()">Sign in to sync</button>
       </div>
     </div>
   </aside>
@@ -1159,12 +1166,16 @@ Examples:
 
 <!-- Mammoth for .docx parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let userProfile = { name: '', title: '', linkedinUrl: '', background: '', cvContent: '', roleProfiles: [] };
 let userResumes  = [];   // [{ label, hint, content }]
 let apiKey       = '';
+let cloudClient  = null;
+let cloudUser    = null;
+let cloudSyncing = false;
 let variantCount = 0;
 let roleProfileCount = 0;
 const histories  = {};
@@ -1202,6 +1213,134 @@ function persistSave() {
   localStorage.setItem('jaa_profile', JSON.stringify(userProfile));
   localStorage.setItem('jaa_resumes', JSON.stringify(userResumes));
   localStorage.setItem('jaa_api_key', apiKey);
+  if (cloudUser) syncProfileToCloud().catch(error => console.warn('Could not sync profile', error));
+}
+
+function setCloudStatus(text, signedIn = false) {
+  const account = document.getElementById('cloud-account');
+  const status = document.getElementById('cloud-account-status');
+  const action = document.getElementById('cloud-account-action');
+  if (!account || !status || !action) return;
+  account.hidden = !cloudClient;
+  if (!cloudClient) return;
+  status.textContent = signedIn ? `Synced account: ${cloudUser.email}` : text;
+  action.textContent = signedIn ? 'Sign out' : 'Sign in to sync';
+}
+
+async function initializeCloud() {
+  if (isLocalDevelopment() || !window.supabase) return;
+  try {
+    const response = await fetch('/api/config', { cache: 'no-store' });
+    const config = await response.json();
+    if (!config.supabaseUrl || !config.supabaseAnonKey) return;
+    cloudClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+    setCloudStatus('Sign in to sync this profile across devices.');
+    const { data } = await cloudClient.auth.getSession();
+    if (data.session) await onCloudSignedIn(data.session.user);
+    cloudClient.auth.onAuthStateChange((_event, session) => {
+      if (session) onCloudSignedIn(session.user);
+      else onCloudSignedOut();
+    });
+  } catch (error) {
+    console.warn('Cloud sync unavailable', error);
+  }
+}
+
+async function handleCloudAccountAction() {
+  if (!cloudClient) return;
+  if (cloudUser) { await cloudClient.auth.signOut(); return; }
+  const email = window.prompt('Enter your email. We will send you a secure sign-in link:');
+  if (!email || !email.includes('@')) return;
+  const { error } = await cloudClient.auth.signInWithOtp({
+    email: email.trim(), options: { emailRedirectTo: window.location.origin }
+  });
+  showToast(error ? `⚠ ${error.message}` : '✓ Check your email for the sign-in link');
+}
+
+async function onCloudSignedIn(user) {
+  cloudUser = user;
+  setCloudStatus('', true);
+  await restoreFromCloud();
+}
+
+function onCloudSignedOut() {
+  cloudUser = null;
+  setCloudStatus('Sign in to sync this profile across devices.');
+}
+
+async function syncProfileToCloud() {
+  if (!cloudClient || !cloudUser || cloudSyncing) return;
+  cloudSyncing = true;
+  try {
+    const profile = {
+      id: cloudUser.id, name: userProfile.name || '', title: userProfile.title || '',
+      linkedin_url: userProfile.linkedinUrl || '', background: userProfile.background || '',
+      cv_content: userProfile.cvContent || '', cv_file_name: userProfile.cvFileName || '',
+      tracker_columns: trackerData.columns || [], updated_at: new Date().toISOString()
+    };
+    const result = await cloudClient.from('profiles').upsert(profile);
+    if (result.error) throw result.error;
+    await cloudClient.from('role_profiles').delete().eq('user_id', cloudUser.id);
+    await cloudClient.from('resume_variants').delete().eq('user_id', cloudUser.id);
+    const roles = (userProfile.roleProfiles || []).map((role, sort_order) => ({
+      user_id: cloudUser.id, label: role.label || '', reference_url: role.url || '',
+      reference_text: role.reference || '', sort_order
+    }));
+    const resumes = (userResumes || []).map((resume, sort_order) => ({
+      user_id: cloudUser.id, label: resume.label || '', hint: resume.hint || '',
+      content: resume.content || '', sort_order
+    }));
+    if (roles.length) { const r = await cloudClient.from('role_profiles').insert(roles); if (r.error) throw r.error; }
+    if (resumes.length) { const r = await cloudClient.from('resume_variants').insert(resumes); if (r.error) throw r.error; }
+    await syncTrackerToCloud();
+  } finally {
+    cloudSyncing = false;
+  }
+}
+
+async function syncTrackerToCloud() {
+  if (!cloudClient || !cloudUser) return;
+  const remove = await cloudClient.from('job_applications').delete().eq('user_id', cloudUser.id);
+  if (remove.error) throw remove.error;
+  const rows = (trackerData.jobs || []).map(job => ({
+    user_id: cloudUser.id, company: job.company || '', role: job.role || '', stage: job.stage || 'Wishlist',
+    date_applied: job.date || null, notes: job.notes || '',
+    custom_fields: Object.fromEntries(Object.entries(job).filter(([key]) => !['id','company','role','stage','date','notes'].includes(key)))
+  }));
+  if (rows.length) { const result = await cloudClient.from('job_applications').insert(rows); if (result.error) throw result.error; }
+}
+
+async function restoreFromCloud() {
+  if (!cloudClient || !cloudUser) return;
+  try {
+    const [profileResult, rolesResult, resumesResult, jobsResult] = await Promise.all([
+      cloudClient.from('profiles').select('*').eq('id', cloudUser.id).maybeSingle(),
+      cloudClient.from('role_profiles').select('*').eq('user_id', cloudUser.id).order('sort_order'),
+      cloudClient.from('resume_variants').select('*').eq('user_id', cloudUser.id).order('sort_order'),
+      cloudClient.from('job_applications').select('*').eq('user_id', cloudUser.id).order('updated_at', { ascending: false })
+    ]);
+    if (profileResult.error) throw profileResult.error;
+    if (!profileResult.data) { await syncProfileToCloud(); return; }
+    const p = profileResult.data;
+    userProfile = {
+      name: p.name || '', title: p.title || '', linkedinUrl: p.linkedin_url || '',
+      background: p.background || '', cvContent: p.cv_content || '', cvFileName: p.cv_file_name || '',
+      roleProfiles: (rolesResult.data || []).map(role => ({ label: role.label, url: role.reference_url, reference: role.reference_text }))
+    };
+    userResumes = (resumesResult.data || []).map(resume => ({ label: resume.label, hint: resume.hint, content: resume.content }));
+    trackerData = {
+      columns: Array.isArray(p.tracker_columns) ? p.tracker_columns : [],
+      jobs: (jobsResult.data || []).map(job => ({ id: job.id, company: job.company, role: job.role, stage: job.stage, date: job.date_applied || '', notes: job.notes || '', ...(job.custom_fields || {}) }))
+    };
+    localStorage.setItem('jaa_profile', JSON.stringify(userProfile));
+    localStorage.setItem('jaa_resumes', JSON.stringify(userResumes));
+    localStorage.setItem('jaa_tracker', JSON.stringify(trackerData));
+    populateSetupForm(); updateUI(); renderTracker();
+    showToast('✓ Cloud profile loaded');
+  } catch (error) {
+    console.warn('Could not restore cloud profile', error);
+    setCloudStatus('Signed in, but cloud data could not be loaded.');
+  }
 }
 
 // ─── POPULATE SETUP FORM FROM SAVED DATA ─────────────────────────────────────
@@ -2520,6 +2659,7 @@ function loadTracker() {
 
 function saveTracker() {
   localStorage.setItem('jaa_tracker', JSON.stringify(trackerData));
+  if (cloudUser) syncTrackerToCloud().catch(error => console.warn('Could not sync tracker', error));
 }
 
 function genId() {
@@ -2804,6 +2944,7 @@ updateUI();
 const isFirstTime = !userProfile.background && !apiKey;
 switchMode('home');
 if (isFirstTime) populateSetupForm();
+initializeCloud();
 </script>
 </body>
 </html>

@@ -11,9 +11,12 @@ create table if not exists public.profiles (
   background text not null default '',
   cv_content text not null default '',
   cv_file_name text not null default '',
+  tracker_columns jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles add column if not exists tracker_columns jsonb not null default '[]'::jsonb;
 
 create table if not exists public.role_profiles (
   id uuid primary key default gen_random_uuid(),

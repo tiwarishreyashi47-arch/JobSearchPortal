@@ -14,6 +14,7 @@ The Phase 1 app stores profile, resume variants, and tracker data in the browser
 ## Data mapping
 
 - `profiles` stores the personal profile and authoritative CV text.
+- `profiles.tracker_columns` stores the user's custom tracker column definitions.
 - `role_profiles` stores each target role and its reference URL/text.
 - `resume_variants` stores optional role-specific resume variants.
 - `job_applications` stores the tracker rows, including custom tracker columns in `custom_fields`.
