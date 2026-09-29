@@ -425,7 +425,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
         </div>
 
         <!-- Section 1: API Key -->
-        <div class="setup-section">
+        <div class="setup-section" id="local-ai-access">
           <div class="setup-section-header">
             <div class="setup-section-num">1</div>
             <div class="setup-section-title">AI Access <span>Optional for local use · deployed app uses secure server access</span></div>
@@ -1135,8 +1135,18 @@ function loadSaved() {
     const r = localStorage.getItem('jaa_resumes');
     if (r) userResumes = JSON.parse(r);
     const k = localStorage.getItem('jaa_api_key');
-    if (k) apiKey = k;
+    if (isLocalDevelopment() && k) apiKey = k;
+    if (!isLocalDevelopment()) localStorage.removeItem('jaa_api_key');
   } catch(e) {}
+}
+
+function isLocalDevelopment() {
+  return location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+}
+
+function configureAiAccess() {
+  const section = document.getElementById('local-ai-access');
+  if (section && !isLocalDevelopment()) section.remove();
 }
 
 function persistSave() {
@@ -1147,7 +1157,8 @@ function persistSave() {
 
 // ─── POPULATE SETUP FORM FROM SAVED DATA ─────────────────────────────────────
 function populateSetupForm() {
-  if (apiKey) document.getElementById('setup-api-key').value = apiKey;
+  const apiKeyField = document.getElementById('setup-api-key');
+  if (apiKeyField && apiKey) apiKeyField.value = apiKey;
   if (userProfile.name) document.getElementById('setup-name').value = userProfile.name;
   if (userProfile.title) document.getElementById('setup-title').value = userProfile.title;
   if (userProfile.background) document.getElementById('setup-background').value = userProfile.background;
@@ -1175,7 +1186,8 @@ function populateSetupForm() {
 
 // ─── SAVE SETUP ───────────────────────────────────────────────────────────────
 function saveSetup() {
-  apiKey = document.getElementById('setup-api-key').value.trim();
+  const apiKeyField = document.getElementById('setup-api-key');
+  apiKey = apiKeyField ? apiKeyField.value.trim() : '';
   userProfile.name       = document.getElementById('setup-name').value.trim();
   userProfile.title      = document.getElementById('setup-title').value.trim();
   userProfile.background = document.getElementById('setup-background').value.trim();
@@ -1524,6 +1536,7 @@ function removeResumeVariant(btn) {
 function toggleApiKeyVisibility() {
   const input = document.getElementById('setup-api-key');
   const btn   = document.getElementById('api-key-toggle-btn');
+  if (!input || !btn) return;
   if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
   else { input.type = 'password'; btn.textContent = 'Show'; }
 }
@@ -2661,6 +2674,7 @@ function closeSidebar() {
 
 
 loadSaved();
+configureAiAccess();
 loadTracker();
 updateUI();
 
