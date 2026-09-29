@@ -322,6 +322,8 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
 .tracker-add-row:hover { color: var(--ink); background: var(--cream); }
 /* Footer */
 .tracker-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; gap: 12px; }
+.tracker-filter { display:flex; align-items:center; gap:8px; margin:0 0 12px; font-size:13px; color:var(--muted); }
+.tracker-filter select { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:7px 10px; color:var(--ink); font-family:var(--sans); }
 .tracker-io-note { font-size: 12px; color: var(--muted); }
 .tracker-io { display: flex; gap: 8px; }
 /* Add column button in header */
@@ -460,6 +462,10 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
               <input type="text" id="setup-title" placeholder="e.g. Product Manager · B2B SaaS">
             </div>
           </div>
+          <div class="field" style="margin-top:14px;">
+            <label class="field-label">LinkedIn URL <span style="font-weight:400;text-transform:none;letter-spacing:0">Optional</span></label>
+            <input type="url" id="setup-linkedin" placeholder="https://www.linkedin.com/in/your-name">
+          </div>
         </div>
 
         <!-- Section 3: CV Upload -->
@@ -491,6 +497,7 @@ textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:f
             <div class="setup-section-title">Additional Context <span>What your CV doesn't capture</span></div>
           </div>
           <div class="field">
+            <label class="field-label">Profile context</label>
             <textarea id="setup-background" rows="8" placeholder="Add context that your CV doesn't capture. This helps the AI understand the full picture.
 
 Examples:
@@ -500,6 +507,7 @@ Examples:
 • Skills you want to emphasise or downplay
 • Career transitions or gaps you want addressed
 • Personal narrative you want threaded through outputs"></textarea>
+            <button class="btn-ghost" type="button" onclick="insertContextTemplate()">＋ Insert a simple profile template</button>
           </div>
         </div>
 
@@ -1065,6 +1073,19 @@ Examples:
         <div class="tracker-stats" id="tracker-stats"></div>
 
         <!-- Table -->
+        <div class="tracker-filter">
+          <label for="tracker-stage-filter">Show</label>
+          <select id="tracker-stage-filter" onchange="renderTrackerBody()">
+            <option value="All">All applications</option>
+            <option value="Interview">Interview stage</option>
+            <option value="Phone Screen">Phone screens</option>
+            <option value="Applied">Applied</option>
+            <option value="Offer">Offers</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Wishlist">Wishlist</option>
+            <option value="Withdrawn">Withdrawn</option>
+          </select>
+        </div>
         <div class="tracker-table-wrap">
           <table class="tracker-table">
             <thead id="tracker-thead"></thead>
@@ -1119,12 +1140,14 @@ Examples:
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let userProfile = { name: '', title: '', background: '', cvContent: '', roleProfiles: [] };
+let userProfile = { name: '', title: '', linkedinUrl: '', background: '', cvContent: '', roleProfiles: [] };
 let userResumes  = [];   // [{ label, hint, content }]
 let apiKey       = '';
 let variantCount = 0;
 let roleProfileCount = 0;
 const histories  = {};
+const activeControllers = {};
+const cancelledGenerations = {};
 
 // ─── PERSISTENCE ──────────────────────────────────────────────────────────────
 function loadSaved() {
@@ -1161,6 +1184,7 @@ function populateSetupForm() {
   if (apiKeyField && apiKey) apiKeyField.value = apiKey;
   if (userProfile.name) document.getElementById('setup-name').value = userProfile.name;
   if (userProfile.title) document.getElementById('setup-title').value = userProfile.title;
+  if (userProfile.linkedinUrl) document.getElementById('setup-linkedin').value = userProfile.linkedinUrl;
   if (userProfile.background) document.getElementById('setup-background').value = userProfile.background;
 
   renderRoleProfiles();
@@ -1190,6 +1214,7 @@ function saveSetup() {
   apiKey = apiKeyField ? apiKeyField.value.trim() : '';
   userProfile.name       = document.getElementById('setup-name').value.trim();
   userProfile.title      = document.getElementById('setup-title').value.trim();
+  userProfile.linkedinUrl = document.getElementById('setup-linkedin').value.trim();
   userProfile.background = document.getElementById('setup-background').value.trim();
   userProfile.roleProfiles = readRoleProfiles();
   // userProfile.cvContent is updated directly by handleCvUpload — no textarea to read
@@ -1225,7 +1250,7 @@ function clearSetup() {
   localStorage.removeItem('jaa_cache_name');
   localStorage.removeItem('jaa_cache_hash');
   localStorage.removeItem('jaa_cache_expire');
-  userProfile = { name: '', title: '', background: '', cvContent: '', cvFileName: '', roleProfiles: [] };
+  userProfile = { name: '', title: '', linkedinUrl: '', background: '', cvContent: '', cvFileName: '', roleProfiles: [] };
   userResumes = [];
   apiKey = '';
   roleProfileCount = 0;
@@ -1580,6 +1605,10 @@ function buildProfileContext() {
     ctx += `CURRENT / RECENT TITLE: ${userProfile.title}\n\n`;
   }
 
+  if (userProfile.linkedinUrl) {
+    ctx += `LINKEDIN PROFILE: ${userProfile.linkedinUrl}\nUse this only as the applicant's profile reference; never invent details from the URL.\n\n`;
+  }
+
   if (userProfile.cvContent) {
     ctx += `CV / RESUME — authoritative factual reference.\nUse this as the source of truth for specific roles, companies, dates, titles, and achievements:\n${'─'.repeat(60)}\n${userProfile.cvContent}\n${'─'.repeat(60)}\n\n`;
   }
@@ -1593,6 +1622,15 @@ function buildProfileContext() {
   }
 
   return ctx.trim();
+}
+
+function insertContextTemplate() {
+  const field = document.getElementById('setup-background');
+  if (!field) return;
+  const template = `TARGET ROLES / DIRECTION:\n- \n\nSTRENGTHS TO EMPHASISE:\n- \n\nSKILLS TO DEVELOP:\n- \n\nCAREER STORY / TRANSITIONS:\n- \n\nWORKING STYLE / VALUES:\n- `;
+  if (field.value.trim() && !confirm('Replace the current context with the template?')) return;
+  field.value = template;
+  field.focus();
 }
 
 // ─── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
@@ -1641,6 +1679,7 @@ Format exactly as follows:
 2. GENUINE STRENGTHS: Where their experience directly maps to what's required. Be specific, not cheerful.
 3. REAL GAPS: The actual shortfalls. If they've never done something the role requires, say so plainly. If it's a stretch, call it a stretch. Don't soften gaps with "however" or "while you may not have X, you do have Y."
 4. HONEST TAKE: Is this worth applying to? If yes — what must they lead with, what must they hide or reframe. If it's a reach — what would actually close the gap.
+5. UPSKILLING PLAN: Give 2–3 concrete, realistic actions to improve the biggest gaps. For each, say the expected effort and whether it is likely to improve interview chances in the short term.
 
 Hard rules:
 - Do not use sandwich feedback. Gaps are gaps.
@@ -1737,11 +1776,13 @@ async function generate(mode) {
   }
 
   histories[mode] = [{ role: 'user', content: userMsg }];
+  cancelledGenerations[mode] = false;
   document.getElementById(mode + '-iterations').innerHTML = '';
   setLoading(mode, true);
   document.getElementById(mode + '-result').classList.add('visible');
 
   const text = await callAPI(mode, histories[mode]);
+  if (cancelledGenerations[mode]) { setLoading(mode, false); return; }
   if (text) {
     histories[mode].push({ role: 'assistant', content: text });
     addIteration(mode, text, 1, true);
@@ -1782,6 +1823,8 @@ function quickRefine(mode, btn) {
 
 // ─── API CALL (Gemini, cache-aware) ──────────────────────────────────────────
 async function callAPI(mode, messages, skipCache = false) {
+  const controller = new AbortController();
+  activeControllers[mode] = controller;
   const cacheName = skipCache ? null : await getValidCache();
 
   // Mode-specific token budgets
@@ -1809,6 +1852,7 @@ async function callAPI(mode, messages, skipCache = false) {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           systemInstruction: getSystemPrompt(mode),
           messages,
@@ -1818,7 +1862,9 @@ async function callAPI(mode, messages, skipCache = false) {
       const data = await response.json();
       return data.error ? `Error: ${data.error}` : (data.text || null);
     } catch (err) {
-      return `Error: ${err.message}`;
+      return err.name === 'AbortError' ? null : `Error: ${err.message}`;
+    } finally {
+      delete activeControllers[mode];
     }
   }
 
@@ -1841,6 +1887,7 @@ async function callAPI(mode, messages, skipCache = false) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        signal: controller.signal,
         body: JSON.stringify(body)
       }
     );
@@ -1858,7 +1905,9 @@ async function callAPI(mode, messages, skipCache = false) {
     if (data.error) return `Error: ${data.error.message}`;
     return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
   } catch (err) {
-    return `Error: ${err.message}`;
+    return err.name === 'AbortError' ? null : `Error: ${err.message}`;
+  } finally {
+    delete activeControllers[mode];
   }
 }
 
@@ -1983,9 +2032,28 @@ function setLoading(mode, on) {
   const spinner = document.getElementById(mode + '-spinner');
   const txt = document.getElementById(mode + '-btn-text');
   const labels = { tailor: 'Generate tailored bullets', cover: 'Write cover letter', outreach: 'Write outreach', gap: 'Analyse fit & gaps', interview: 'Generate prep guide' };
-  if (btn) btn.disabled = on;
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '';
+    if (on) {
+      btn.classList.add('cancel-action');
+      btn.onclick = () => cancelGeneration(mode);
+      btn.innerHTML = '<span class="spinner" style="display:block"></span><span>Stop generation</span>';
+    } else {
+      btn.classList.remove('cancel-action');
+      btn.onclick = () => generate(mode);
+      btn.innerHTML = `<span class="spinner" id="${mode}-spinner"></span><span id="${mode}-btn-text">${labels[mode] || 'Generate'}</span>`;
+    }
+  }
   if (spinner) spinner.style.display = on ? 'block' : 'none';
   if (txt) txt.textContent = on ? 'Generating…' : (labels[mode] || 'Generate');
+}
+
+function cancelGeneration(mode) {
+  cancelledGenerations[mode] = true;
+  activeControllers[mode]?.abort();
+  setLoading(mode, false);
+  showToast('Generation stopped');
 }
 
 function setRefining(mode, on) {
@@ -2477,7 +2545,14 @@ function renderTrackerBody() {
     </td></tr>`;
     return;
   }
-  tbody.innerHTML = trackerData.jobs.map(job => {
+  const filter = document.getElementById('tracker-stage-filter')?.value || 'All';
+  const visibleJobs = filter === 'All' ? trackerData.jobs : trackerData.jobs.filter(job => job.stage === filter);
+  if (!visibleJobs.length) {
+    const span = 6 + trackerData.columns.length;
+    tbody.innerHTML = `<tr><td colspan="${span}"><div class="tracker-empty"><div class="empty-icon">🔎</div>No applications match this filter.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = visibleJobs.map(job => {
     const ss   = STAGE_STYLE[job.stage] || STAGE_STYLE['Applied'];
     const opts = STAGES.map(s =>
       `<option value="${s}"${job.stage===s?' selected':''}>${s}</option>`
