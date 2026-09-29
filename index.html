@@ -1170,6 +1170,10 @@ function isLocalDevelopment() {
 function configureAiAccess() {
   const section = document.getElementById('local-ai-access');
   if (section && !isLocalDevelopment()) section.remove();
+  document.querySelectorAll('#panel-setup > .setup-section').forEach((visibleSection, index) => {
+    const number = visibleSection.querySelector('.setup-section-num');
+    if (number) number.textContent = String(index + 1);
+  });
 }
 
 function persistSave() {
