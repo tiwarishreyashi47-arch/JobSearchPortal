@@ -1,27 +1,75 @@
 # Job Application Assistant
 
-A role-aware job application assistant that helps candidates tailor applications to a specific target role without fabricating experience.
+Job Application Assistant is a role-aware job application assistant for candidates who want to tailor an application to a target role without fabricating experience. It is an AI-assisted job-search workflow, not a generic resume generator.
 
-## Phase 1 prototype
+## What it helps with
 
-- Save multiple target role profiles, each anchored by a representative job description.
-- Tailor resume bullets and assess fit against a role-specific reference.
-- Refine generated outputs interactively.
-- Download generated outputs as `.docx` files.
-- Keep profile data in the browser and use a secure Vercel endpoint for deployed AI requests.
+The prototype helps a candidate:
 
-## Phase 2 foundation
+- create multiple target-role profiles from representative job descriptions;
+- assess role-specific fit against their existing experience;
+- tailor resume bullets for a particular role;
+- refine generated wording interactively;
+- track applications and download generated `.docx` outputs.
 
-The first Phase 2 slice is authenticated cloud persistence. The Supabase schema and data contract are in [`supabase/`](./supabase/). It is intentionally additive: until a Supabase project is connected and the auth flow is enabled, the deployed prototype continues to use its Phase 1 browser storage.
+The product keeps the candidate in the loop: AI suggestions are editable and should be checked against the candidate’s real background before use.
 
-The planned migration is user-scoped storage for profiles, target role profiles, resume variants, and job applications. Automatic job discovery, recommendation history, and collaboration remain later Phase 2 slices.
+## How it works
 
-The account UI is enabled automatically when `SUPABASE_URL` and `SUPABASE_ANON_KEY` are present in the deployment. Without them, the app intentionally keeps the Phase 1 browser-only behavior.
+1. The candidate saves a profile and a target role with its job description or reference text.
+2. The browser sends the relevant context to the server-side generation endpoint.
+3. The assistant returns fit guidance and tailored wording grounded in the supplied profile and role.
+4. The candidate refines the result, saves a role-specific variant, and downloads an output when ready.
 
-## Local development
+Phase 1 keeps profile, role, resume-variant, and tracker data in browser storage. The first Phase 2 slice adds an optional Supabase contract for authenticated, user-scoped persistence; it is additive and does not replace the browser-only path when Supabase is not configured.
 
-Open `index.html` with a local static server. For local-only use, a Gemini API key can be entered in My Profile. In a deployed Vercel project, set `GEMINI_API_KEY` in the project environment variables; the `/api/generate` function will use it without exposing the key to the browser.
+## Product and technical decisions
 
-## Deployment
+- Role context is explicit so recommendations are tied to a target opportunity rather than generic resume advice.
+- The deployed app uses a Vercel serverless endpoint for AI requests, keeping the provider key out of the browser.
+- Local browser storage makes the prototype easy to try without an account or database.
+- Supabase tables and Row Level Security are defined in [`supabase/`](./supabase/) for the next persistence step.
+- Generated content is presented as editable assistance; the product does not claim to verify employment history or guarantee job outcomes.
 
-Connect the repository to Vercel, set `GEMINI_API_KEY` for the Preview and Production environments, and deploy. Pull requests should receive preview deployments; production should be updated only after the feature branch is reviewed and merged.
+## Stack and repository map
+
+- Plain HTML, CSS, and JavaScript in [`index.html`](./index.html)
+- Vercel function in [`api/generate.js`](./api/generate.js)
+- Provider/configuration helpers in [`api/config.js`](./api/config.js)
+- Optional Supabase schema and data contract in [`supabase/`](./supabase/)
+- Static portfolio/demo page in [`portfolio.html`](./portfolio.html)
+
+There is no application build step or package dependency at present. The prototype uses the browser Web APIs and a local static server for development.
+
+## Real, optional, and simulated
+
+Implemented in the current prototype:
+
+- role-specific profile and fit workflows;
+- interactive tailoring and browser-side tracking;
+- downloadable application outputs;
+- server-side AI request handling for a deployed Vercel setup;
+- an additive Supabase schema for future authenticated persistence.
+
+Still prototype/deferred:
+
+- job discovery and recommendations are workflow support, not a complete job-board integration;
+- browser storage is not cross-device persistence;
+- the Supabase contract is not a substitute for a fully enabled production account/auth flow;
+- AI output still requires candidate review and can be incomplete or wrong.
+
+## Run locally
+
+Serve the repository with any local static server and open the resulting URL. For example:
+
+```bash
+npx serve .
+```
+
+For local-only use, the interface can accept a Gemini API key in the profile flow. For a deployed Vercel project, set `GEMINI_API_KEY` in the project environment and let `/api/generate` handle requests server-side. Do not commit secrets.
+
+The repository has no automated test suite yet. Before opening a change, manually exercise profile creation, target-role setup, tailoring, refinement, download, and the configured/unconfigured AI paths.
+
+## Status and limitations
+
+This is a functional portfolio prototype moving from a browser-first Phase 1 toward optional cloud persistence. It is useful for demonstrating product judgment around role context, AI-assisted writing, privacy boundaries, and incremental architecture. It should not be treated as a production recruiting system, a factual verifier, or a guarantee of application success.
